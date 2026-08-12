@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #F5F7FA;
+    color: #013d5e;
+    font-family: 'Inter', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', 'Inter', sans-serif;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(245, 247, 250, 0.8);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #019df4;
+}
+
+/* Custom Glassmorphism & UI Utilities */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.glass-dark {
+  background: rgba(1, 61, 94, 0.90);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.movistar-gradient-bg {
+  background: linear-gradient(135deg, #013d5e 0%, #019df4 60%, #e13c80 140%);
+}
+
+.movistar-accent-gradient {
+  background: linear-gradient(90deg, #00A859 0%, #019df4 50%, #e13c80 100%);
+}
+
+.movistar-badge-glow {
+  box-shadow: 0 0 12px rgba(1, 157, 244, 0.35);
+}
+
+.chat-bubble-shadow {
+  box-shadow: 0 4px 20px -2px rgba(1, 157, 244, 0.08);
+}
+
+.btn-pink {
+  background-color: #e13c80;
+  color: white;
+  box-shadow: 0 0 16px rgba(225, 60, 128, 0.28);
+}
+
+.btn-pink:hover {
+  background-color: #c0306b;
+}
+
