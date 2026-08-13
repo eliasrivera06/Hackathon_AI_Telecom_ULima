@@ -51,61 +51,12 @@ export const getInitialMessages = async () => {
   return initialMessages;
 };
 
+import { sendMessage as chatServiceSendMessage } from './chatService';
+
 /**
- * Send user prompt to Lucía AI (n8n / Gemini endpoint stub)
+ * Send user prompt to Lucía AI (delegates to chatService -> n8n Webhook)
  */
 export const sendMessageToLuciaAI = async (userPrompt) => {
-  await delay(800);
-  
-  const lowerPrompt = userPrompt.toLowerCase();
-  
-  if (lowerPrompt.includes('desglose') || lowerPrompt.includes('detalle')) {
-    return {
-      sender: 'assistant',
-      agentName: 'Lucía',
-      agentRole: 'Asistente Inteligente de Recibos Movistar',
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      text: "Con gusto. Aquí tienes el desglose exacto de los rubros de tu factura de **Julio 2024**:",
-      hasVisualComparison: false,
-      hasRootCauseCard: false,
-      showModal: 'detail',
-      suggestedActions: [
-        { id: "action-benefits", label: "Ver beneficios recomendados", icon: "Sparkles", primary: true },
-        { id: "action-claim", label: "Registrar consulta formal", icon: "HelpCircle", primary: false }
-      ]
-    };
-  }
-
-  if (lowerPrompt.includes('beneficio') || lowerPrompt.includes('descuento') || lowerPrompt.includes('promocion')) {
-    return {
-      sender: 'assistant',
-      agentName: 'Lucía',
-      agentRole: 'Asistente Inteligente de Recibos Movistar',
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      text: "Excelente. He encontrado **3 oportunidades activas** para ajustar la tarifa de tu Plan Hogar Fibra 600 Mbps:",
-      hasVisualComparison: false,
-      hasRootCauseCard: false,
-      showModal: 'benefits',
-      suggestedActions: [
-        { id: "action-detail", label: "Ver desglose de factura", icon: "FileText", primary: false },
-        { id: "action-claim", label: "Solicitar asistencia directa", icon: "HelpCircle", primary: true }
-      ]
-    };
-  }
-
-  // Default response
-  return {
-    sender: 'assistant',
-    agentName: 'Lucía',
-    agentRole: 'Asistente Inteligente de Recibos Movistar',
-    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    text: `Entendido, Carlos. He analizado tu consulta sobre *"${userPrompt}"*. Lucía está lista para asistirte en la gestión de tu recibo, estado del servicio o aplicación de nuevos beneficios comerciales.`,
-    hasVisualComparison: false,
-    hasRootCauseCard: false,
-    suggestedActions: [
-      { id: "action-detail", label: "Ver desglose completo", icon: "FileText", primary: true },
-      { id: "action-benefits", label: "Revisar beneficios de plan", icon: "Sparkles", primary: false },
-      { id: "action-claim", label: "Registrar consulta oficial", icon: "HelpCircle", primary: false }
-    ]
-  };
+  return await chatServiceSendMessage(userPrompt);
 };
+

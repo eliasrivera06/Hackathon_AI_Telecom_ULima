@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { initialMessages } from '../../data/mockData';
-import { sendMessageToLuciaAI } from '../../services/api';
+import { sendMessage, resetSessionId } from '../../services/chatService';
 import ChatHistorySidebar from '../../components/Chat/ChatHistorySidebar';
 import ChatHeader from '../../components/Chat/ChatHeader';
 import MessageBubble from '../../components/MessageBubble/MessageBubble';
@@ -33,7 +33,7 @@ export default function ChatBotPage() {
     setMessages((prev) => [...prev, userMsg]);
     setIsLoading(true);
     try {
-      const response = await sendMessageToLuciaAI(text);
+      const response = await sendMessage(text);
       setMessages((prev) => [...prev, { ...response, id: `msg-ai-${Date.now()}` }]);
       if (response.showModal) setActiveModal(response.showModal);
     } catch (err) {
@@ -50,6 +50,7 @@ export default function ChatBotPage() {
   };
 
   const handleNewChat = () => {
+    const newSession = resetSessionId();
     setCurrentChatId(`chat-${Date.now()}`);
     setMessages([{
       id: `msg-welcome-${Date.now()}`,
@@ -63,6 +64,7 @@ export default function ChatBotPage() {
         { id: 'action-benefits', label: 'Explorar promociones', icon: 'Sparkles', primary: false },
       ],
     }]);
+    console.log(`[ChatBotPage] Started new conversation session: ${newSession}`);
   };
 
   return (
