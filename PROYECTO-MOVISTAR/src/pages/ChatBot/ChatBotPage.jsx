@@ -10,7 +10,9 @@ import BenefitsModal from '../../components/Modal/BenefitsModal';
 import ClaimModal from '../../components/Modal/ClaimModal';
 import { Sparkles, Loader2 } from 'lucide-react';
 
-export default function ChatBotPage() {
+import ChatSwitcher from '../ChatSwitcher/ChatSwitcher';
+
+export default function ChatBotPage({ webhookUrl }) {
   const [messages, setMessages] = useState(initialMessages);
   const [isLoading, setIsLoading] = useState(false);
   const [currentChatId, setCurrentChatId] = useState('chat-1');
@@ -33,7 +35,7 @@ export default function ChatBotPage() {
     setMessages((prev) => [...prev, userMsg]);
     setIsLoading(true);
     try {
-      const response = await sendMessage(text);
+      const response = await sendMessage(text, webhookUrl);
       setMessages((prev) => [...prev, { ...response, id: `msg-ai-${Date.now()}` }]);
       if (response.showModal) setActiveModal(response.showModal);
     } catch (err) {
@@ -68,8 +70,8 @@ export default function ChatBotPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-5rem)] -m-4 sm:-m-6 lg:-m-8 flex overflow-hidden bg-movistar-gray">
-
+    <div className="h-[calc(100vh-5rem)] -m-4 sm:-m-6 lg:-m-8 flex overflow-hidden bg-movistar-gray relative">
+      <ChatSwitcher />
       {/* History Panel */}
       <ChatHistorySidebar
         currentChatId={currentChatId}

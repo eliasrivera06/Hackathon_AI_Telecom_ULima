@@ -34,7 +34,7 @@ export default function DashboardPage() {
 
           {/* CTA → Chat */}
           <button
-            onClick={() => navigate('/chat')}
+            onClick={() => navigate('/chat-web')}
             className="px-6 py-3.5 rounded-2xl text-white font-extrabold text-sm transition-all transform hover:-translate-y-0.5 shrink-0 flex items-center justify-center gap-2 border border-white/20"
             style={{ background: 'linear-gradient(90deg, #00A859, #e13c80)', boxShadow: '0 0 20px rgba(225,60,128,0.30)' }}
           >
@@ -111,7 +111,7 @@ export default function DashboardPage() {
             <p className="text-xs text-slate-500 mt-1">Descuentos de hasta S/ 15/mes por renovación.</p>
           </div>
           <button
-            onClick={() => navigate('/chat')}
+            onClick={() => navigate('/chat-web')}
             className="w-full py-2 px-3 rounded-xl text-white font-bold text-xs transition-colors flex items-center justify-between"
             style={{ background: 'linear-gradient(90deg, #019df4, #e13c80)' }}
           >

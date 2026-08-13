@@ -15,7 +15,7 @@ import {
 export default function Sidebar({ isOpen, onClose }) {
   const navItems = [
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, badge: null },
-    { label: 'Lucía - Explicador AI', path: '/chat', icon: Sparkles, badge: 'IA Activa', badgeStyle: { background: '#00A859', color: '#fff' } },
+    { label: 'Lucía - Web Chat', path: '/chat-web', icon: Sparkles, badge: 'IA Activa', badgeStyle: { background: '#00A859', color: '#fff' } },
     { label: 'Mis Recibos', path: '/recibos', icon: Receipt, badge: null },
     { label: 'Beneficios de Plan', path: '/beneficios', icon: Gift, badge: '3 Nuevos', badgeStyle: { background: '#e13c80', color: '#fff' } },
     { label: 'Configuración', path: '/configuracion', icon: Settings, badge: null },
@@ -104,7 +104,7 @@ export default function Sidebar({ isOpen, onClose }) {
             </p>
 
             <NavLink
-              to="/chat"
+              to="/chat-web"
               onClick={onClose}
               className="flex items-center justify-between w-full px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-colors border border-white/20 hover:bg-white/15"
             >

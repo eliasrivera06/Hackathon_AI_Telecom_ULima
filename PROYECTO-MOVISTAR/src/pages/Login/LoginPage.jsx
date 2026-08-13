@@ -1,18 +1,24 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ChatSwitcher from '../ChatSwitcher/ChatSwitcher';
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [deliveryMethod, setDeliveryMethod] = useState('sms'); // 'sms' | 'whatsapp'
 
+  // TODO: Conectar con n8n para validar el número ingresado.
+  // URL sugerida del Webhook: import.meta.env.VITE_N8N_WEBHOOK_URL_LOGIN (necesita ser configurada)
   const handleSubmit = (e) => {
     e.preventDefault();
+    // Aquí iría la lógica de fetch hacia n8n con `phoneNumber` y `deliveryMethod`
+    // Si la validación es exitosa, redirigir:
     navigate('/dashboard');
   };
 
   return (
-    <div className="min-h-screen w-full bg-white flex flex-col items-center justify-center p-6 md:p-8 font-sans selection:bg-sky-100">
+    <div className="min-h-screen w-full bg-white flex flex-col items-center justify-center p-6 md:p-8 font-sans selection:bg-sky-100 relative">
+      <ChatSwitcher />
       
       {/* Centered Form Container (Max-width ~480px, white background) */}
       <div className="w-full max-w-[480px] bg-white flex flex-col justify-between min-h-[640px] py-4">
@@ -216,13 +222,21 @@ export default function LoginPage() {
         </div>
 
         {/* Bottom Section: Siguiente Button */}
-        <div className="pt-8 pb-4">
+        <div className="pt-8 pb-4 flex flex-col items-center">
           <button
             form="login-form"
             type="submit"
-            className="w-full h-[56px] rounded-full bg-[#7EC6F1] hover:bg-[#50A7E2] active:bg-[#4196D1] text-white font-semibold text-[17px] sm:text-[18px] transition-colors shadow-none flex items-center justify-center"
+            className="w-full h-[56px] rounded-full bg-[#7EC6F1] hover:bg-[#50A7E2] active:bg-[#4196D1] text-white font-semibold text-[17px] sm:text-[18px] transition-colors shadow-none flex items-center justify-center mb-4"
           >
             Siguiente
+          </button>
+          
+          <button
+            onClick={() => navigate('/dashboard')}
+            type="button"
+            className="text-xs text-gray-400 hover:text-gray-600 transition-colors bg-transparent border-none"
+          >
+            skip login (dev)
           </button>
         </div>
 

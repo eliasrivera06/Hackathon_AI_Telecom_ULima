@@ -100,14 +100,14 @@ const buildFallbackResponse = (userPrompt) => {
  *   "response": "Tu recibo aumentó porque..."
  * }
  */
-export const sendMessage = async (userPrompt) => {
+export const sendMessage = async (userPrompt, customWebhookUrl = null) => {
   const sessionId = getSessionId();
-  const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL;
+  const webhookUrl = customWebhookUrl || import.meta.env.VITE_N8N_WEBHOOK_URL;
 
   console.log(`[chatService] Sending message to n8n. SessionID: ${sessionId}`);
 
   if (!webhookUrl) {
-    console.warn('[chatService] VITE_N8N_WEBHOOK_URL is not defined. Using fallback response.');
+    console.warn('[chatService] Webhook URL is not defined. Using fallback response.');
     return buildFallbackResponse(userPrompt);
   }
 
