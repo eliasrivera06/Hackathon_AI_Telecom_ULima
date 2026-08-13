@@ -16,7 +16,7 @@ export default function ChatSwitcher() {
   return (
     <div className="absolute top-2 right-2 z-[999] flex bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
       <button
-        onClick={() => navigate('/chat-web')}
+        onClick={() => navigate('/login')}
         className={`px-4 py-1.5 text-sm font-semibold transition-colors ${activeView === 'web' ? 'bg-[#019df4] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
       >
         Web

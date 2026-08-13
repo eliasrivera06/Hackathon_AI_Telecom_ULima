@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import ChatBotPage from '../ChatBot/ChatBotPage';
+import ChatMobileComponent from './ChatMobileComponent';
 import ChatSwitcher from '../ChatSwitcher/ChatSwitcher';
 import { RefreshCw, Search, Phone, User, MessageCircle, MoreHorizontal, LogIn } from 'lucide-react';
 
@@ -124,8 +124,8 @@ export default function ChatCelPage() {
 
               {activeTab === 'chat' && (
                 /* CHAT FUNCIONAL */
-                <div className="absolute inset-0 pt-8 pb-20">
-                  <ChatBotPage webhookUrl={webhookUrl} />
+                <div className="absolute inset-0 pt-0 pb-16 flex flex-col">
+                  <ChatMobileComponent webhookUrl={webhookUrl} />
                 </div>
               )}
             </div>

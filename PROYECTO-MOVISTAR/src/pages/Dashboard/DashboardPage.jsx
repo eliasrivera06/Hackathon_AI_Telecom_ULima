@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { Sparkles, Wifi, Shield, ChevronRight, Zap, ArrowUpRight } from 'lucide-react';
 import { userProfile, currentPlan, billingOverview } from '../../data/mockData';
 import ReceiptCard from '../../components/Receipts/ReceiptCard';
+import ChatSwitcher from '../ChatSwitcher/ChatSwitcher';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="space-y-8 pb-10">
+    <div className="space-y-8 pb-10 relative">
+      <ChatSwitcher />
 
       {/* Welcome Banner */}
       <div className="rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden shadow-movistar-lg"
