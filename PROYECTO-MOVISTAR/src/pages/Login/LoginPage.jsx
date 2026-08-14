@@ -29,10 +29,10 @@ export default function LoginPage() {
           {/* 1. Back Arrow */}
           <div className="flex items-center justify-start pt-2 pb-2">
             <button
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/')}
               type="button"
               className="p-1 -ml-1 text-slate-800 hover:text-sky-600 transition-colors focus:outline-none"
-              aria-label="Volver"
+              aria-label="Volver a Inicio"
             >
               <svg 
                 viewBox="0 0 24 24" 
