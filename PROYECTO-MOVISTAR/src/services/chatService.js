@@ -1,12 +1,20 @@
 ﻿/**
  * Chat Service Layer for Movistar Lucía AI
- * Centralizes HTTP communication with Make / n8n AI Agent Webhook.
+ * Centralizes HTTP communication with Make AI Agent Webhook.
+ * 100% User Account Chat Isolation & Memory Persistence.
  */
 
 const SESSION_STORAGE_KEY = 'movistar_chat_session_id';
 const USER_PHONE_KEY = 'movistar_user_phone';
 const SUBSCRIBER_KEY = 'movistar_subscriber_key';
-const CHAT_MESSAGES_KEY = 'movistar_chat_messages';
+
+/**
+ * Genera la clave de almacenamiento única para cada número de teléfono
+ */
+export const getStorageKey = (phone = null) => {
+  const target = phone || getUserPhone() || 'guest';
+  return `movistar_chat_messages_${target}`;
+};
 
 /**
  * Get or set the verified user phone number
@@ -50,39 +58,63 @@ export const getSessionId = () => {
 };
 
 /**
- * Reset/regenerate session ID for a new conversation.
+ * Reset/regenerate session ID for a specific user phone conversation.
  */
-export const resetSessionId = () => {
-  const userPhone = getUserPhone();
-  const newSessionId = userPhone ? `user_${userPhone}_${Date.now()}` : `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+export const resetSessionId = (phone = null) => {
+  const targetPhone = phone || getUserPhone();
+  const newSessionId = targetPhone ? `user_${targetPhone}_${Date.now()}` : `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
   localStorage.setItem(SESSION_STORAGE_KEY, newSessionId);
-  localStorage.removeItem(CHAT_MESSAGES_KEY);
+  const key = getStorageKey(targetPhone);
+  localStorage.removeItem(key);
   return newSessionId;
 };
 
 /**
- * Save & Load persistent chat messages in localStorage for frontend continuity
+ * Save & Load persistent chat messages isolated PER TELEPHONE NUMBER
  */
-export const getSavedMessages = (defaultInitialMessages = []) => {
+export const getSavedMessages = (phoneOrInitial = null, defaultInitial = []) => {
+  let phone = null;
+  let defaultInitialMessages = defaultInitial;
+
+  if (typeof phoneOrInitial === 'string') {
+    phone = phoneOrInitial;
+  } else if (Array.isArray(phoneOrInitial)) {
+    defaultInitialMessages = phoneOrInitial;
+  }
+
+  const key = getStorageKey(phone);
   try {
-    const saved = localStorage.getItem(CHAT_MESSAGES_KEY);
+    const saved = localStorage.getItem(key);
     if (saved) {
       const parsed = JSON.parse(saved);
+      // Evitar cargar conversaciones residuales antiguas de pruebas globales
       if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.id !== 'msg-1') {
         return parsed;
       }
     }
   } catch (err) {
-    console.warn('[chatService] Error cargando mensajes guardados:', err);
+    console.warn('[chatService] Error cargando mensajes guardados para clave:', key, err);
   }
   return defaultInitialMessages;
 };
 
-export const saveMessages = (messages) => {
+export const saveMessages = (messagesOrPhone, messagesParam = null) => {
+  let phone = null;
+  let messages = [];
+
+  if (typeof messagesOrPhone === 'string') {
+    phone = messagesOrPhone;
+    messages = messagesParam || [];
+  } else {
+    phone = getUserPhone();
+    messages = messagesOrPhone || [];
+  }
+
+  const key = getStorageKey(phone);
   try {
-    localStorage.setItem(CHAT_MESSAGES_KEY, JSON.stringify(messages));
+    localStorage.setItem(key, JSON.stringify(messages));
   } catch (err) {
-    console.warn('[chatService] Error guardando mensajes:', err);
+    console.warn('[chatService] Error guardando mensajes para clave:', key, err);
   }
 };
 
@@ -96,7 +128,7 @@ export const verifyLoginWithDatabase = async (phoneNumber, deliveryMethod = 'sms
 
   if (!loginWebhookUrl) {
     console.warn('[chatService] VITE_MAKE_WEBHOOK_URL_LOGIN no definida.');
-    return { success: false, error: 'URL de webhook de login no configurada en .env' };
+    return { success: false, error: 'URL de webhook de login no configurada en variables de entorno.' };
   }
 
   try {
@@ -144,7 +176,7 @@ export const verifyLoginWithDatabase = async (phoneNumber, deliveryMethod = 'sms
       };
     }
 
-    // Guardar usuario y subscriber_key verificados
+    // Guardar usuario y subscriber_key verificados para esta cuenta específica
     setUserPhone(phoneNumber);
     if (data && (data.subscriber_key || data.subscriberKey)) {
       setSubscriberKey(data.subscriber_key || data.subscriberKey);
@@ -167,7 +199,7 @@ export const verifyLoginWithDatabase = async (phoneNumber, deliveryMethod = 'sms
 };
 
 /**
- * Helper to parse text response from various Make/n8n return structures
+ * Helper to parse text response from various Make return structures
  */
 const extractResponseText = (data) => {
   if (!data) return null;
@@ -188,44 +220,24 @@ const extractResponseText = (data) => {
 };
 
 /**
- * Fallback response builder if webhook is offline or unconfigured
+ * Error fallback response if network connection fails
  */
-const buildFallbackResponse = (userPrompt) => {
-  const lowerPrompt = userPrompt.toLowerCase();
-  
-  let text = `Hola, Carlos. He analizado tu consulta sobre *"${userPrompt}"*. Lucía está lista para asistirte en la gestión de tu recibo, estado del servicio o aplicación de nuevos beneficios comerciales.`;
-  let hasVisualComparison = false;
-  let showModal = null;
-
-  if (lowerPrompt.includes('aumentó') || lowerPrompt.includes('aumento') || lowerPrompt.includes('recibo') || lowerPrompt.includes('por qué') || lowerPrompt.includes('por que')) {
-    text = "Hola Carlos, he analizado en detalle tu facturación de **Julio 2024** (Recibo `REC-2024-07-88392`).\n\nTu recibo aumentó **S/ 20.00** respecto al mes anterior porque el **15 de julio finalizó la Promoción de Bienvenida** (-S/ 20/mes) que tuviste activa durante los últimos 6 meses. Tu plan ha retornado a su tarifa base regular contratada.";
-    hasVisualComparison = true;
-  } else if (lowerPrompt.includes('desglose') || lowerPrompt.includes('detalle') || lowerPrompt.includes('factura')) {
-    text = "Con gusto. Aquí tienes el desglose exacto de los rubros de tu factura de **Julio 2024**:";
-    showModal = 'detail';
-  } else if (lowerPrompt.includes('beneficio') || lowerPrompt.includes('descuento') || lowerPrompt.includes('promocion')) {
-    text = "Excelente. He encontrado **3 oportunidades activas** para ajustar la tarifa de tu Plan Hogar Fibra 600 Mbps:";
-    showModal = 'benefits';
-  }
-
+const buildErrorFallbackResponse = (errorMessage) => {
   return {
     sender: 'assistant',
     agentName: 'Lucía',
-    agentRole: 'Asistente Inteligente de Recibos Movistar',
+    agentRole: 'Asistente de Facturación Movistar',
     timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    text,
-    hasVisualComparison,
-    showModal,
-    suggestedActions: [
-      { id: "action-detail", label: "Ver desglose completo", icon: "FileText", primary: true },
-      { id: "action-benefits", label: "Revisar beneficios recomendados", icon: "Sparkles", primary: false },
-      { id: "action-claim", label: "Registrar consulta oficial", icon: "HelpCircle", primary: false }
-    ]
+    text: errorMessage || 'Lo sentimos, hubo un problema de comunicación con el servicio de Lucía AI. Por favor intenta enviar tu consulta nuevamente.',
+    hasVisualComparison: false,
+    comparisonData: null,
+    showModal: null,
+    suggestedActions: []
   };
 };
 
 /**
- * Send user message to Webhook
+ * Send user message to Make AI Agent Webhook
  */
 export const sendMessage = async (userPrompt, customWebhookUrl = null) => {
   const sessionId = getSessionId();
@@ -233,11 +245,11 @@ export const sendMessage = async (userPrompt, customWebhookUrl = null) => {
   const subscriberKey = getSubscriberKey();
   const webhookUrl = customWebhookUrl || import.meta.env.VITE_MAKE_WEBHOOK_URL || import.meta.env.VITE_N8N_WEBHOOK_URL;
 
-  console.log(`[chatService] Enviando mensaje con memoria. SubscriberKey: ${subscriberKey} | SessionID: ${sessionId}`);
+  console.log(`[chatService] Enviando mensaje a Make: "${userPrompt}" (SubscriberKey: ${subscriberKey}, SessionID: ${sessionId})`);
 
   if (!webhookUrl) {
-    console.warn('[chatService] Webhook URL no configurada. Usando respuesta local.');
-    return buildFallbackResponse(userPrompt);
+    console.warn('[chatService] Webhook URL no configurada en VITE_MAKE_WEBHOOK_URL.');
+    return buildErrorFallbackResponse('La URL del Webhook de Make no se encuentra configurada en el entorno.');
   }
 
   try {
@@ -255,7 +267,7 @@ export const sendMessage = async (userPrompt, customWebhookUrl = null) => {
     });
 
     if (!response.ok) {
-      throw new Error(`Webhook retornó status ${response.status}`);
+      throw new Error(`El Webhook respondió con status HTTP ${response.status}`);
     }
 
     let textResponse = null;
@@ -274,32 +286,30 @@ export const sendMessage = async (userPrompt, customWebhookUrl = null) => {
       }
     }
 
-    console.log('[chatService] Respuesta recibida del Webhook:', textResponse);
+    console.log('[chatService] Respuesta REAL recibida de Make:', textResponse, data);
 
     if (!textResponse) {
-      throw new Error('No se pudo extraer texto de respuesta del payload');
+      throw new Error('El Webhook no devolvió un cuerpo de texto válido');
     }
 
-    const lowerPrompt = userPrompt.toLowerCase();
-    const lowerResponse = textResponse.toLowerCase();
+    const comparisonData = (data && (data.comparison || data.receiptComparison)) || null;
+    const hasVisualComparison = Boolean(comparisonData || (data && data.hasVisualComparison));
+    const suggestedActions = (data && (data.suggestedActions || data.actions)) || [];
 
     return {
       sender: 'assistant',
       agentName: 'Lucía',
-      agentRole: 'Asistente Inteligente de Recibos Movistar',
+      agentRole: 'Asistente de Facturación Movistar',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       text: textResponse,
-      hasVisualComparison: lowerPrompt.includes('aumentó') || lowerPrompt.includes('aumento') || lowerPrompt.includes('recibo') || lowerResponse.includes('julio 2024') || lowerResponse.includes('variación') || lowerResponse.includes('variacion'),
+      hasVisualComparison: hasVisualComparison,
+      comparisonData: comparisonData,
       showModal: data?.showModal || null,
-      suggestedActions: [
-        { id: "action-detail", label: "Ver desglose completo", icon: "FileText", primary: true },
-        { id: "action-benefits", label: "Revisar beneficios recomendados", icon: "Sparkles", primary: false },
-        { id: "action-claim", label: "Registrar consulta oficial", icon: "HelpCircle", primary: false }
-      ]
+      suggestedActions: suggestedActions
     };
 
   } catch (error) {
-    console.error('[chatService] Error comunicando con Webhook:', error.message);
-    return buildFallbackResponse(userPrompt);
+    console.error('[chatService] Error comunicando con Webhook de Make:', error.message);
+    return buildErrorFallbackResponse(`No se pudo conectar con el agente de Make (${error.message}). Por favor verifica tu conexión e intenta nuevamente.`);
   }
 };

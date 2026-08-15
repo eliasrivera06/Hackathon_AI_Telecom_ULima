@@ -2,15 +2,15 @@
 import { useNavigate } from 'react-router-dom';
 import ChatMobileComponent from './ChatMobileComponent';
 import ChatSwitcher from '../ChatSwitcher/ChatSwitcher';
-import { verifyLoginWithDatabase, getUserPhone } from '../../services/chatService';
-import { Phone, User, MessageCircle, MoreHorizontal, AlertCircle, Loader2, Search } from 'lucide-react';
+import { verifyLoginWithDatabase, getUserPhone, setUserPhone, setSubscriberKey } from '../../services/chatService';
+import { Phone, User, MessageCircle, MoreHorizontal, AlertCircle, Loader2, Search, LogOut } from 'lucide-react';
 
 export default function ChatCelPage() {
   const navigate = useNavigate();
   const webhookUrl = (import.meta.env.VITE_MAKE_WEBHOOK_URL_CEL || import.meta.env.VITE_N8N_WEBHOOK_URL_CEL || import.meta.env.VITE_MAKE_WEBHOOK_URL);
   
   // Flujo de la App Móvil: 'login' -> 'home' -> 'chat'
-  const [activeTab, setActiveTab] = useState('login');
+  const [activeTab, setActiveTab] = useState(() => getUserPhone() ? 'home' : 'login');
   
   // Form State para Login
   const [phoneNumber, setPhoneNumber] = useState(getUserPhone() || '');
@@ -46,6 +46,15 @@ export default function ChatCelPage() {
     }
   };
 
+  const handleLogout = () => {
+    setUserPhone('');
+    setSubscriberKey('');
+    setPhoneNumber('');
+    setLoginError(null);
+    setIsSubmittingLogin(false);
+    setActiveTab('login');
+  };
+
   return (
     <div className="w-full min-h-screen flex justify-center items-center bg-slate-200 p-4 relative font-sans">
       <ChatSwitcher />
@@ -68,7 +77,7 @@ export default function ChatCelPage() {
                 <button
                   onClick={() => navigate('/')}
                   type="button"
-                  className="p-1 -ml-2 text-slate-800 hover:text-[#019df4] transition-colors focus:outline-none"
+                  className="p-1 -ml-2 text-slate-800 hover:text-[#019df4] transition-colors focus:outline-none cursor-pointer"
                   aria-label="Volver a Inicio"
                 >
                   <svg 
@@ -301,13 +310,7 @@ export default function ChatCelPage() {
                   <p className="font-extrabold text-sm">{phoneNumber || '998 877 665'}</p>
                 </div>
               </div>
-              <button 
-                onClick={() => setActiveTab('login')} 
-                title="Cerrar sesión"
-                className="p-1.5 rounded-xl bg-white/15 text-white hover:bg-white/25 transition-colors text-xs font-semibold"
-              >
-                Salir
-              </button>
+              
             </div>
 
             {/* Body Container */}
@@ -397,8 +400,12 @@ export default function ChatCelPage() {
               )}
 
               {activeTab === 'chat' && (
-                <div className="absolute inset-0 pt-0 pb-16 flex flex-col">
-                  <ChatMobileComponent webhookUrl={webhookUrl} />
+                <div className="absolute inset-0 pt-0 pb-[72px] flex flex-col">
+                  <ChatMobileComponent 
+                    userPhone={phoneNumber} 
+                    webhookUrl={webhookUrl}
+                    onBack={() => setActiveTab('home')}
+                                      />
                 </div>
               )}
             </div>
@@ -407,7 +414,7 @@ export default function ChatCelPage() {
             <div className="absolute bottom-0 w-full bg-white border-t border-slate-100 flex items-center justify-around py-2 px-2 rounded-b-[34px] pb-5 shrink-0 z-10 shadow-[0_-4px_15px_rgba(0,0,0,0.05)]">
               <button 
                 onClick={() => setActiveTab('home')} 
-                className={`flex flex-col items-center gap-0.5 ${activeTab === 'home' ? 'text-[#019df4]' : 'text-gray-400'}`}
+                className={`flex flex-col items-center gap-0.5 ${activeTab === 'home' ? 'text-[#019df4]' : 'text-gray-400'} cursor-pointer`}
               >
                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${activeTab === 'home' ? 'bg-blue-50' : 'bg-transparent'}`}>
                   <User className="w-5 h-5" />
@@ -427,7 +434,7 @@ export default function ChatCelPage() {
               
               <button 
                 onClick={() => setActiveTab('chat')} 
-                className={`flex flex-col items-center gap-0.5 ${activeTab === 'chat' ? 'text-[#019df4]' : 'text-gray-400'}`}
+                className={`flex flex-col items-center gap-0.5 ${activeTab === 'chat' ? 'text-[#019df4]' : 'text-gray-400'} cursor-pointer`}
               >
                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center relative ${activeTab === 'chat' ? 'bg-blue-50' : 'bg-transparent'}`}>
                   <MessageCircle className="w-5 h-5" />
@@ -439,13 +446,14 @@ export default function ChatCelPage() {
               </button>
               
               <button 
-                onClick={() => setActiveTab('home')} 
-                className="flex flex-col items-center gap-0.5 text-gray-400 hover:text-gray-600"
+                onClick={handleLogout} 
+                className="flex flex-col items-center gap-0.5 text-gray-400 hover:text-red-500 cursor-pointer"
+                title="Cerrar sesión"
               >
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-transparent">
-                  <MoreHorizontal className="w-5 h-5" />
+                  <LogOut className="w-5 h-5" />
                 </div>
-                <span className="text-[10px] font-semibold">Más</span>
+                <span className="text-[10px] font-semibold">Salir</span>
               </button>
             </div>
           </>

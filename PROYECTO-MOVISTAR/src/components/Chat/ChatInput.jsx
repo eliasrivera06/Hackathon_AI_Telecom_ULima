@@ -1,14 +1,8 @@
 ﻿import React, { useState } from 'react';
-import { Send, Sparkles, Paperclip } from 'lucide-react';
+import { Send, Paperclip } from 'lucide-react';
 
 export default function ChatInput({ onSendMessage, isLoading }) {
   const [text, setText] = useState('');
-
-  const quickPrompts = [
-    "¿Por qué aumentó S/ 20 mi recibo?",
-    "Ver desglose de mi factura de Julio",
-    "¿Qué promociones puedo aplicar a mi plan?"
-  ];
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -18,57 +12,38 @@ export default function ChatInput({ onSendMessage, isLoading }) {
   };
 
   return (
-    <div className="p-4 bg-white border-t border-movistar-gray-border space-y-3">
-
-      {/* Quick Prompts */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1">
-        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 flex items-center gap-1">
-          <Sparkles className="w-3 h-3" style={{ color: '#019df4' }} />
-          Sugeridos:
-        </span>
-        {quickPrompts.map((prompt, idx) => (
-          <button
-            key={idx}
-            onClick={() => !isLoading && onSendMessage(prompt)}
-            disabled={isLoading}
-            className="px-3 py-1 rounded-full text-xs font-medium border transition-all shrink-0 disabled:opacity-50"
-            style={{
-              background: idx % 2 === 0 ? 'rgba(1,157,244,0.07)' : 'rgba(225,60,128,0.07)',
-              borderColor: idx % 2 === 0 ? 'rgba(1,157,244,0.25)' : 'rgba(225,60,128,0.25)',
-              color: idx % 2 === 0 ? '#019df4' : '#e13c80',
-            }}
-          >
-            {prompt}
-          </button>
-        ))}
-      </div>
-
-      {/* Input Row */}
-      <form onSubmit={handleSubmit} className="relative flex items-center">
+    <div className="p-2.5 sm:p-3 bg-white border-t border-slate-200/80 shadow-[0_-2px_10px_rgba(0,0,0,0.03)] w-full">
+      <form onSubmit={handleSubmit} className="relative flex items-center w-full">
+        
+        {/* Attach file button */}
         <button
           type="button"
-          className="absolute left-3.5 text-slate-400 hover:text-slate-600 transition-colors p-1"
+          className="absolute left-3 text-slate-400 hover:text-slate-600 transition-colors p-1"
           title="Adjuntar archivo"
         >
-          <Paperclip className="w-5 h-5" />
+          <Paperclip className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
 
+        {/* Text Input */}
         <input
           type="text"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Pregúntale a Lucía sobre tu recibo de Movistar..."
+          placeholder="Escribe tu consulta sobre tu recibo a Lucía..."
           disabled={isLoading}
-          className="w-full pl-12 pr-14 py-3.5 rounded-2xl bg-movistar-gray border border-transparent text-sm text-slate-800 outline-none transition-all font-sans"
-          onFocus={e => { e.target.style.borderColor = '#019df4'; e.target.style.background = 'white'; }}
-          onBlur={e => { e.target.style.borderColor = 'transparent'; e.target.style.background = ''; }}
+          className="w-full pl-10 sm:pl-11 pr-12 sm:pr-14 py-3 sm:py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs sm:text-sm text-slate-800 placeholder-slate-400 outline-none transition-all font-sans focus:border-[#019df4] focus:bg-white focus:ring-2 focus:ring-[#019df4]/15"
         />
 
+        {/* Send Button */}
         <button
           type="submit"
           disabled={!text.trim() || isLoading}
-          className="absolute right-2.5 p-2.5 rounded-xl text-white transition-all disabled:opacity-40"
-          style={{ background: 'linear-gradient(90deg, #00A859, #019df4)', boxShadow: '0 0 12px rgba(1,157,244,0.30)' }}
+          aria-label="Enviar mensaje"
+          className="absolute right-1.5 sm:right-2 p-2 sm:p-2.5 rounded-xl text-white transition-all disabled:opacity-40 hover:scale-105 active:scale-95 cursor-pointer shadow-sm disabled:hover:scale-100 disabled:cursor-not-allowed"
+          style={{ 
+            background: 'linear-gradient(135deg, #00A859, #019df4)',
+            boxShadow: '0 2px 8px rgba(1,157,244,0.30)'
+          }}
         >
           <Send className="w-4 h-4" />
         </button>

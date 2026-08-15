@@ -25,18 +25,42 @@ const getCleanWelcomeMessage = () => [
 ];
 
 export default function ChatBotPage({ webhookUrl }) {
-  const [messages, setMessages] = useState(() => getSavedMessages(getCleanWelcomeMessage()));
+  const userPhone = getUserPhone();
+  const [messages, setMessages] = useState(() => getSavedMessages(userPhone, getCleanWelcomeMessage()));
   const [isLoading, setIsLoading] = useState(false);
   const [currentChatId, setCurrentChatId] = useState('chat-1');
   const [isMobileHistoryOpen, setIsMobileHistoryOpen] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
-  const userPhone = getUserPhone();
 
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
+    const currentPhone = getUserPhone();
+    const isolatedMessages = getSavedMessages(currentPhone, getCleanWelcomeMessage());
+    setMessages(isolatedMessages);
+  }, [userPhone]);
+
+  useEffect(() => {
+    const currentPhone = getUserPhone();
+    saveMessages(currentPhone, messages);
+
+    if (!messages || messages.length === 0) return;
+
+    const lastMessage = messages[messages.length - 1];
+
+    if (lastMessage && lastMessage.sender === 'assistant' && !lastMessage.id.includes('welcome')) {
+      setTimeout(() => {
+        const el = document.getElementById(lastMessage.id);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+      return;
+    }
+
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    saveMessages(messages);
   }, [messages, isLoading]);
 
   const handleSendMessage = async (text) => {
@@ -48,14 +72,15 @@ export default function ChatBotPage({ webhookUrl }) {
     };
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
-    saveMessages(updatedMessages);
+    const currentPhone = getUserPhone();
+    saveMessages(currentPhone, updatedMessages);
     setIsLoading(true);
 
     try {
       const response = await sendMessage(text, webhookUrl);
       const withAiResponse = [...updatedMessages, { ...response, id: 'msg-ai-' + Date.now() }];
       setMessages(withAiResponse);
-      saveMessages(withAiResponse);
+      saveMessages(currentPhone, withAiResponse);
       if (response && response.showModal) setActiveModal(response.showModal);
     } catch (err) {
       console.error('[ChatBotPage] Error enviando mensaje:', err);
@@ -71,16 +96,17 @@ export default function ChatBotPage({ webhookUrl }) {
   };
 
   const handleNewChat = () => {
-    const newSession = resetSessionId();
+    const currentPhone = getUserPhone();
+    const newSession = resetSessionId(currentPhone);
     setCurrentChatId('chat-' + Date.now());
     const freshWelcome = getCleanWelcomeMessage();
     setMessages(freshWelcome);
-    saveMessages(freshWelcome);
-    console.log('[ChatBotPage] Nueva sesión iniciada:', newSession);
+    saveMessages(currentPhone, freshWelcome);
+    console.log('[ChatBotPage] Nueva sesión iniciada para:', currentPhone, newSession);
   };
 
   return (
-    <div className="h-[calc(100vh-5rem)] -m-4 sm:-m-6 lg:-m-8 flex overflow-hidden bg-movistar-gray">
+    <div className="h-[calc(100vh-5rem)] -m-4 sm:-m-6 lg:-m-8 flex overflow-hidden bg-movistar-gray w-full">
 
       {/* History Panel */}
       <ChatHistorySidebar
@@ -92,7 +118,7 @@ export default function ChatBotPage({ webhookUrl }) {
       />
 
       {/* Main Chat Panel */}
-      <div className="flex-1 flex flex-col h-full bg-slate-50/50 relative overflow-hidden">
+      <div className="flex-1 flex flex-col h-full bg-slate-50/50 relative overflow-hidden min-w-0">
 
         <ChatHeader
           onToggleHistory={() => setIsMobileHistoryOpen(!isMobileHistoryOpen)}
@@ -100,7 +126,7 @@ export default function ChatBotPage({ webhookUrl }) {
         />
 
         {/* Message Stream */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-4 w-full">
 
           {/* Context Banner */}
           <div className="p-3.5 rounded-2xl border text-xs flex items-center justify-between font-sans"
@@ -137,7 +163,7 @@ export default function ChatBotPage({ webhookUrl }) {
                 <Loader2 className="w-4 h-4 animate-spin" />
               </div>
               <div className="space-y-1">
-                <span className="text-xs font-bold block" style={{ color: '#013d5e' }}>Lucía está procesando tu consulta...</span>
+                <span className="text-xs font-bold block text-[#013d5e]">Lucía está procesando tu consulta...</span>
                 <span className="text-[10px] text-slate-400">Consultando información oficial de facturación</span>
               </div>
             </div>
