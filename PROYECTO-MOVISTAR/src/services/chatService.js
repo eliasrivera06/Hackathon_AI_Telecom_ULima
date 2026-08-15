@@ -5,6 +5,7 @@
 
 const SESSION_STORAGE_KEY = 'movistar_chat_session_id';
 const USER_PHONE_KEY = 'movistar_user_phone';
+const SUBSCRIBER_KEY = 'movistar_subscriber_key';
 const CHAT_MESSAGES_KEY = 'movistar_chat_messages';
 
 /**
@@ -19,6 +20,18 @@ export const setUserPhone = (phone) => {
     localStorage.setItem(USER_PHONE_KEY, phone);
   } else {
     localStorage.removeItem(USER_PHONE_KEY);
+  }
+};
+
+export const getSubscriberKey = () => {
+  return localStorage.getItem(SUBSCRIBER_KEY) || getUserPhone() || getSessionId();
+};
+
+export const setSubscriberKey = (key) => {
+  if (key) {
+    localStorage.setItem(SUBSCRIBER_KEY, key);
+  } else {
+    localStorage.removeItem(SUBSCRIBER_KEY);
   }
 };
 
@@ -131,8 +144,13 @@ export const verifyLoginWithDatabase = async (phoneNumber, deliveryMethod = 'sms
       };
     }
 
-    // Guardar usuario verificado
+    // Guardar usuario y subscriber_key verificados
     setUserPhone(phoneNumber);
+    if (data && (data.subscriber_key || data.subscriberKey)) {
+      setSubscriberKey(data.subscriber_key || data.subscriberKey);
+    } else {
+      setSubscriberKey(phoneNumber);
+    }
     localStorage.setItem(SESSION_STORAGE_KEY, `user_${phoneNumber}`);
 
     return {
@@ -208,18 +226,11 @@ const buildFallbackResponse = (userPrompt) => {
 
 /**
  * Send user message to Webhook
- * 
- * Payload sent:
- * {
- *   "sessionId": "user_999999999",
- *   "subscriber_key": "999999999",
- *   "message": "¿Por qué aumentó mi recibo?"
- * }
  */
 export const sendMessage = async (userPrompt, customWebhookUrl = null) => {
   const sessionId = getSessionId();
   const userPhone = getUserPhone();
-  const subscriberKey = userPhone || sessionId;
+  const subscriberKey = getSubscriberKey();
   const webhookUrl = customWebhookUrl || import.meta.env.VITE_MAKE_WEBHOOK_URL || import.meta.env.VITE_N8N_WEBHOOK_URL;
 
   console.log(`[chatService] Enviando mensaje con memoria. SubscriberKey: ${subscriberKey} | SessionID: ${sessionId}`);

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import ChatMobileComponent from './ChatMobileComponent';
 import ChatSwitcher from '../ChatSwitcher/ChatSwitcher';
 import { verifyLoginWithDatabase, getUserPhone } from '../../services/chatService';
-import { Phone, User, MessageCircle, MoreHorizontal, AlertCircle, Loader2 } from 'lucide-react';
+import { Phone, User, MessageCircle, MoreHorizontal, AlertCircle, Loader2, Search } from 'lucide-react';
 
 export default function ChatCelPage() {
   const navigate = useNavigate();
