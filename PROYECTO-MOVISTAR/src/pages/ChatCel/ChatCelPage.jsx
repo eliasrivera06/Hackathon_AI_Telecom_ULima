@@ -1,46 +1,49 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ChatMobileComponent from './ChatMobileComponent';
 import ChatSwitcher from '../ChatSwitcher/ChatSwitcher';
-import { RefreshCw, Search, Phone, User, MessageCircle, MoreHorizontal } from 'lucide-react';
+import { verifyLoginWithDatabase, getUserPhone } from '../../services/chatService';
+import { Phone, User, MessageCircle, MoreHorizontal, AlertCircle, Loader2 } from 'lucide-react';
 
 export default function ChatCelPage() {
   const navigate = useNavigate();
-  const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL_CEL;
+  const webhookUrl = (import.meta.env.VITE_MAKE_WEBHOOK_URL_CEL || import.meta.env.VITE_N8N_WEBHOOK_URL_CEL || import.meta.env.VITE_MAKE_WEBHOOK_URL);
   
   // Flujo de la App Móvil: 'login' -> 'home' -> 'chat'
   const [activeTab, setActiveTab] = useState('login');
   
   // Form State para Login
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState(getUserPhone() || '');
   const [deliveryMethod, setDeliveryMethod] = useState('sms'); // 'sms' | 'whatsapp'
   const [isSubmittingLogin, setIsSubmittingLogin] = useState(false);
+  const [loginError, setLoginError] = useState(null);
+
+  // Sanitizar entrada: solo dígitos numéricos y máximo 9 dígitos
+  const handlePhoneChange = (e) => {
+    const raw = e.target.value;
+    const digitsOnly = raw.replace(/\D/g, '').slice(0, 9);
+    setPhoneNumber(digitsOnly);
+    if (loginError) setLoginError(null);
+  };
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmittingLogin(true);
-
-    const loginWebhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL_LOGIN || import.meta.env.VITE_N8N_WEBHOOK_URL_CEL;
-
-    if (loginWebhookUrl) {
-      try {
-        console.log('[Login] Enviando credenciales a n8n:', { phoneNumber, deliveryMethod });
-        await fetch(loginWebhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            phoneNumber,
-            deliveryMethod,
-            timestamp: new Date().toISOString()
-          })
-        });
-      } catch (err) {
-        console.warn('[Login] n8n Webhook offline o no disponible, continuando en modo demostración local.', err);
-      }
+    if (!phoneNumber || phoneNumber.length !== 9) {
+      setLoginError('Por favor ingresa un número celular válido de 9 dígitos.');
+      return;
     }
 
+    setIsSubmittingLogin(true);
+    setLoginError(null);
+
+    const result = await verifyLoginWithDatabase(phoneNumber, deliveryMethod);
     setIsSubmittingLogin(false);
-    setActiveTab('home');
+
+    if (result.success) {
+      setActiveTab('home');
+    } else {
+      setLoginError(result.error || 'El número no se encuentra registrado en nuestra base de datos.');
+    }
   };
 
   return (
@@ -56,7 +59,7 @@ export default function ChatCelPage() {
         </div>
 
         {activeTab === 'login' ? (
-          /* PANTALLA LOGIN MÓVIL (DISEÑO MODO WEB CONVERTIDO A CELULAR) */
+          /* PANTALLA LOGIN MÓVIL */
           <div className="flex-1 flex flex-col justify-between p-6 bg-white z-10 pt-10 overflow-y-auto">
             
             <div className="space-y-5">
@@ -82,7 +85,7 @@ export default function ChatCelPage() {
                 </button>
               </div>
 
-              {/* 2. Ilustración Line-Art (Avión de papel + Celular) */}
+              {/* 2. Ilustración Line-Art */}
               <div className="flex justify-center pt-1 pb-1">
                 <svg 
                   viewBox="0 0 160 70" 
@@ -136,28 +139,33 @@ export default function ChatCelPage() {
                 </svg>
               </div>
 
-              {/* 3. Título y Descripción */}
+              {/* 3. Título & Subtítulo */}
               <div className="text-center space-y-2">
-                <h1 className="text-xl font-bold text-[#222222] tracking-tight leading-snug">
+                <h1 className="text-[22px] font-semibold text-[#222222] tracking-tight leading-snug">
                   Ingresa tu número Movistar
                 </h1>
                 
-                <div className="text-xs sm:text-sm leading-relaxed text-[#4A4A4A]">
+                <div className="text-[14px] leading-relaxed text-[#4A4A4A]">
                   <p className="font-normal">Te enviaremos un código de seguridad</p>
                   <p className="font-semibold text-[#222222]">para verificar tu identidad</p>
                 </div>
               </div>
 
-              {/* 4. Campo de Texto del Número */}
-              <form onSubmit={handleLoginSubmit} id="mobile-login-form" className="pt-2">
+              {/* 4. Campo Input de Celular */}
+              <form onSubmit={handleLoginSubmit} id="mobile-login-form" className="pt-2 space-y-3">
                 <div className="relative flex items-center">
                   <input
                     type="tel"
-                    required
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={9}
                     value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    placeholder="Número de celular Movistar"
-                    className="w-full h-[52px] pl-5 pr-10 rounded-lg bg-white border-[1.5px] border-[#767676] text-[#222222] placeholder-[#757575] text-sm outline-none transition-colors focus:border-[#50A7E2]"
+                    onChange={handlePhoneChange}
+                    placeholder="Ej. 998877665"
+                    disabled={isSubmittingLogin}
+                    className={`w-full h-[52px] pl-4 pr-11 rounded-[8px] bg-white border-[1.5px] text-[#222222] placeholder-[#888888] text-[15px] outline-none transition-colors ${
+                      loginError ? 'border-red-500 focus:border-red-600' : 'border-[#767676] focus:border-[#50A7E2]'
+                    }`}
                   />
                   <div className="absolute right-3.5 pointer-events-none text-[#757575]">
                     <svg 
@@ -174,69 +182,79 @@ export default function ChatCelPage() {
                     </svg>
                   </div>
                 </div>
+
+                {/* Contador de dígitos */}
+                <div className="flex justify-between items-center px-1 text-[11px] text-gray-500">
+                  <span>Solo 9 dígitos numéricos</span>
+                  <span className={phoneNumber.length === 9 ? 'text-green-600 font-bold' : 'text-gray-400'}>
+                    {phoneNumber.length}/9
+                  </span>
+                </div>
+
+                {/* Mensaje de Error si la BD no lo valida */}
+                {loginError && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs flex items-start gap-2 animate-in fade-in">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-red-500 mt-0.5" />
+                    <span className="leading-tight">{loginError}</span>
+                  </div>
+                )}
               </form>
 
-              {/* 5. Selección de Método de Envío (SMS / WhatsApp) */}
+              {/* 5. Contenedor de Opciones */}
               <div className="pt-2 space-y-2">
-                <p className="text-xs sm:text-sm text-[#2B2B2B] font-medium text-left">
+                <p className="text-[14px] text-[#2B2B2B] font-normal text-left">
                   ¿Cómo prefieres recibir el código?
                 </p>
 
-                <div className="w-full bg-white border-[1.5px] border-[#E0E0E0] rounded-xl p-4 space-y-3">
-                  {/* SMS */}
+                <div className="w-full bg-white border-[1.5px] border-[#E0E0E0] rounded-[12px] p-4 space-y-3.5">
                   <label 
                     onClick={() => setDeliveryMethod('sms')}
-                    className="flex items-center gap-3 cursor-pointer group select-none"
+                    className="flex items-center gap-3.5 cursor-pointer group select-none"
                   >
                     <div className="relative flex items-center justify-center">
                       <input
                         type="radio"
-                        name="mobileDeliveryMethod"
+                        name="deliveryMethod"
                         value="sms"
                         checked={deliveryMethod === 'sms'}
                         onChange={() => setDeliveryMethod('sms')}
                         className="sr-only"
                       />
-                      <div className={`w-5 h-5 rounded-full border-2 transition-colors flex items-center justify-center ${
-                        deliveryMethod === 'sms' 
-                          ? 'border-[#50A7E2]' 
-                          : 'border-gray-400 group-hover:border-gray-500'
+                      <div className={`w-[22px] h-[22px] rounded-full border-[2px] transition-colors flex items-center justify-center ${
+                        deliveryMethod === 'sms' ? 'border-[#50A7E2]' : 'border-[#9CA3AF]'
                       }`}>
                         {deliveryMethod === 'sms' && (
-                          <div className="w-2.5 h-2.5 rounded-full bg-[#50A7E2]" />
+                          <div className="w-[10px] h-[10px] rounded-full bg-[#50A7E2]" />
                         )}
                       </div>
                     </div>
-                    <span className="text-xs sm:text-sm text-[#374151] font-medium">
+                    <span className="text-[15px] text-[#374151] font-normal">
                       Por SMS
                     </span>
                   </label>
 
-                  {/* WhatsApp */}
                   <label 
                     onClick={() => setDeliveryMethod('whatsapp')}
-                    className="flex items-center gap-3 cursor-pointer group select-none"
+                    className="flex items-center gap-3.5 cursor-pointer group select-none"
                   >
                     <div className="relative flex items-center justify-center">
                       <input
                         type="radio"
-                        name="mobileDeliveryMethod"
+                        name="deliveryMethod"
                         value="whatsapp"
                         checked={deliveryMethod === 'whatsapp'}
                         onChange={() => setDeliveryMethod('whatsapp')}
                         className="sr-only"
                       />
-                      <div className={`w-5 h-5 rounded-full border-2 transition-colors flex items-center justify-center ${
-                        deliveryMethod === 'whatsapp' 
-                          ? 'border-[#50A7E2]' 
-                          : 'border-gray-400 group-hover:border-gray-500'
+                      <div className={`w-[22px] h-[22px] rounded-full border-[2px] transition-colors flex items-center justify-center ${
+                        deliveryMethod === 'whatsapp' ? 'border-[#50A7E2]' : 'border-[#9CA3AF]'
                       }`}>
                         {deliveryMethod === 'whatsapp' && (
-                          <div className="w-2.5 h-2.5 rounded-full bg-[#50A7E2]" />
+                          <div className="w-[10px] h-[10px] rounded-full bg-[#50A7E2]" />
                         )}
                       </div>
                     </div>
-                    <span className="text-xs sm:text-sm text-[#374151] font-medium">
+                    <span className="text-[15px] text-[#374151] font-normal">
                       Por WhatsApp
                     </span>
                   </label>
@@ -245,51 +263,56 @@ export default function ChatCelPage() {
 
             </div>
 
-            {/* Bottom Button Siguiente */}
-            <div className="pt-4 pb-2">
+            {/* Bottom Button */}
+            <div className="pt-5 pb-3">
               <button
                 form="mobile-login-form"
                 type="submit"
-                disabled={isSubmittingLogin}
-                className="w-full h-12 rounded-full bg-[#019df4] hover:bg-[#0086d1] active:bg-[#0074b8] text-white font-bold text-sm shadow-md transition-all flex items-center justify-center cursor-pointer disabled:opacity-70"
+                disabled={phoneNumber.length !== 9 || isSubmittingLogin}
+                className={`w-full h-[52px] rounded-full text-white font-semibold text-[16px] transition-all flex items-center justify-center gap-2 ${
+                  phoneNumber.length === 9 && !isSubmittingLogin
+                    ? 'bg-[#50A7E2] hover:bg-[#3894D4] cursor-pointer shadow-md'
+                    : 'bg-[#B0D6F1] cursor-not-allowed opacity-75'
+                }`}
               >
-                {isSubmittingLogin ? 'Verificando...' : 'Siguiente'}
+                {isSubmittingLogin ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Verificando en Base de Datos...</span>
+                  </>
+                ) : (
+                  <span>Siguiente</span>
+                )}
               </button>
             </div>
 
           </div>
         ) : (
-          /* PANTALLAS HOME O CHAT DE LA APP MÓVIL */
+          /* MODO APP POST-LOGIN */
           <>
-            {/* Blue Header */}
-            <div className="bg-[#019df4] text-white pt-9 pb-5 px-5 rounded-b-[28px] flex items-center justify-between z-10 shrink-0 shadow-sm relative">
-              <div className="flex items-center gap-3 mt-1">
-                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center p-1 relative">
-                  <div className="w-full h-full bg-[#019df4] rounded-full flex items-center justify-center">
-                    <Phone className="w-5 h-5 text-white" />
-                  </div>
-                  <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white" />
+            {/* Header Módulo */}
+            <div className="w-full bg-[#019df4] text-white pt-10 pb-6 px-5 flex items-center justify-between shrink-0 shadow-md">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center font-bold text-sm">
+                  {phoneNumber ? phoneNumber.slice(-2) : 'CR'}
                 </div>
                 <div>
-                  <p className="text-[10px] font-semibold opacity-90">Línea activa</p>
-                  <p className="text-base font-bold tracking-tight">
-                    {phoneNumber || '987 654 321'}
-                  </p>
+                  <p className="text-[10px] text-blue-100 uppercase tracking-widest font-semibold">Cliente Movistar</p>
+                  <p className="font-extrabold text-sm">{phoneNumber || '998 877 665'}</p>
                 </div>
               </div>
               <button 
-                onClick={() => setActiveTab('login')}
-                className="p-1.5 hover:bg-white/20 rounded-full transition-colors mt-1 text-xs font-semibold"
-                title="Cerrar Sesión"
+                onClick={() => setActiveTab('login')} 
+                title="Cerrar sesión"
+                className="p-1.5 rounded-xl bg-white/15 text-white hover:bg-white/25 transition-colors text-xs font-semibold"
               >
-                <RefreshCw className="w-5 h-5" />
+                Salir
               </button>
             </div>
 
             {/* Body Container */}
             <div className="flex-1 w-full bg-slate-50 relative -mt-5 pt-7 pb-20 overflow-y-auto">
               {activeTab === 'home' && (
-                /* INICIO APP (VISUAL MOCK DE GESTIÓN MÓVIL) */
                 <div className="p-5 space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
                   
                   {/* Plan Info Card */}
@@ -302,8 +325,8 @@ export default function ChatCelPage() {
                       </div>
                       <div className="border-l border-gray-200" />
                       <div>
-                        <p className="text-[10px] text-gray-400">Cuenta</p>
-                        <p className="text-xs font-bold text-gray-700">P009841203</p>
+                        <p className="text-[10px] text-gray-400">Línea Verificada</p>
+                        <p className="text-xs font-bold text-green-600">{phoneNumber || '998877665'}</p>
                       </div>
                     </div>
                     <div className="flex justify-between items-center text-left pt-1">
@@ -362,7 +385,7 @@ export default function ChatCelPage() {
                       </div>
                       <div>
                         <p className="font-bold text-sm">Lucía AI - Asistente</p>
-                        <p className="text-xs text-blue-100">Entiende tu recibo y resuelve dudas</p>
+                        <p className="text-xs text-blue-100">Entiende tu recibo con memoria</p>
                       </div>
                     </div>
                     <span className="text-xs font-bold bg-white text-[#019df4] px-2.5 py-1 rounded-full">
@@ -374,7 +397,6 @@ export default function ChatCelPage() {
               )}
 
               {activeTab === 'chat' && (
-                /* CHAT FUNCIONAL LUCÍA AI */
                 <div className="absolute inset-0 pt-0 pb-16 flex flex-col">
                   <ChatMobileComponent webhookUrl={webhookUrl} />
                 </div>
@@ -403,15 +425,14 @@ export default function ChatCelPage() {
                 <span className="text-[10px] font-semibold">Recibos</span>
               </button>
               
-              {/* Chat Icon */}
               <button 
                 onClick={() => setActiveTab('chat')} 
                 className={`flex flex-col items-center gap-0.5 ${activeTab === 'chat' ? 'text-[#019df4]' : 'text-gray-400'}`}
               >
                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center relative ${activeTab === 'chat' ? 'bg-blue-50' : 'bg-transparent'}`}>
                   <MessageCircle className="w-5 h-5" />
-                  <div className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-red-500 rounded-full flex items-center justify-center text-[8px] text-white font-bold">
-                    1
+                  <div className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 rounded-full flex items-center justify-center text-[8px] text-white font-bold">
+                    ✓
                   </div>
                 </div>
                 <span className="text-[10px] font-semibold">Lucía AI</span>

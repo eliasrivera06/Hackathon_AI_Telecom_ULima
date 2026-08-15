@@ -1,19 +1,41 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ChatSwitcher from '../ChatSwitcher/ChatSwitcher';
+import { verifyLoginWithDatabase, getUserPhone } from '../../services/chatService';
+import { AlertCircle, Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState(getUserPhone() || '');
   const [deliveryMethod, setDeliveryMethod] = useState('sms'); // 'sms' | 'whatsapp'
+  const [isSubmittingLogin, setIsSubmittingLogin] = useState(false);
+  const [loginError, setLoginError] = useState(null);
 
-  // TODO: Conectar con n8n para validar el número ingresado.
-  // URL sugerida del Webhook: import.meta.env.VITE_N8N_WEBHOOK_URL_LOGIN (necesita ser configurada)
-  const handleSubmit = (e) => {
+  const handlePhoneChange = (e) => {
+    const raw = e.target.value;
+    const digitsOnly = raw.replace(/\D/g, '').slice(0, 9);
+    setPhoneNumber(digitsOnly);
+    if (loginError) setLoginError(null);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Aquí iría la lógica de fetch hacia n8n con `phoneNumber` y `deliveryMethod`
-    // Si la validación es exitosa, redirigir:
-    navigate('/dashboard');
+    if (!phoneNumber || phoneNumber.length !== 9) {
+      setLoginError('Por favor ingresa un número celular válido de 9 dígitos.');
+      return;
+    }
+
+    setIsSubmittingLogin(true);
+    setLoginError(null);
+
+    const result = await verifyLoginWithDatabase(phoneNumber, deliveryMethod);
+    setIsSubmittingLogin(false);
+
+    if (result.success) {
+      navigate('/dashboard');
+    } else {
+      setLoginError(result.error || 'El número no se encuentra registrado en nuestra base de datos.');
+    }
   };
 
   return (
@@ -56,7 +78,6 @@ export default function LoginPage() {
               xmlns="http://www.w3.org/2000/svg" 
               className="w-[150px] h-[65px]"
             >
-              {/* Left: Dashed curve */}
               <path 
                 d="M15 46 C 25 22, 48 20, 64 32" 
                 stroke="#50A7E2" 
@@ -64,8 +85,6 @@ export default function LoginPage() {
                 strokeDasharray="3.5 3.5" 
                 strokeLinecap="round" 
               />
-
-              {/* Center: Paper airplane figure */}
               <g transform="translate(68, 16) rotate(-8)">
                 <path 
                   d="M0 16 L32 0 L18 30 L13 18 Z" 
@@ -82,8 +101,6 @@ export default function LoginPage() {
                   strokeLinecap="round" 
                 />
               </g>
-
-              {/* Right: Vertical Cellphone outline */}
               <rect 
                 x="115" 
                 y="10" 
@@ -94,7 +111,6 @@ export default function LoginPage() {
                 stroke="#50A7E2" 
                 strokeWidth="2.2" 
               />
-              {/* Speaker notch line */}
               <line 
                 x1="126" 
                 y1="15" 
@@ -104,7 +120,6 @@ export default function LoginPage() {
                 strokeWidth="1.8" 
                 strokeLinecap="round" 
               />
-              {/* Home button dot */}
               <circle cx="130" cy="53" r="1.8" fill="#50A7E2" />
             </svg>
           </div>
@@ -122,16 +137,21 @@ export default function LoginPage() {
           </div>
 
           {/* 4. Number Input Form Field */}
-          <form onSubmit={handleSubmit} id="login-form" className="pt-3">
+          <form onSubmit={handleSubmit} id="login-form" className="pt-3 space-y-3">
             <div className="relative flex items-center">
               <input
                 type="tel"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={9}
                 value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="Número de celular Movistar"
-                className="w-full h-[58px] pl-6 pr-12 rounded-[6px] bg-white border-[1.5px] border-[#767676] text-[#222222] placeholder-[#757575] text-[16px] sm:text-[17px] outline-none transition-colors focus:border-[#50A7E2]"
+                onChange={handlePhoneChange}
+                placeholder="Ej. 998877665"
+                disabled={isSubmittingLogin}
+                className={`w-full h-[58px] pl-6 pr-12 rounded-[6px] bg-white border-[1.5px] text-[#222222] placeholder-[#757575] text-[16px] sm:text-[17px] outline-none transition-colors ${
+                  loginError ? 'border-red-500 focus:border-red-600' : 'border-[#767676] focus:border-[#50A7E2]'
+                }`}
               />
-              {/* Right Phone Outline Icon */}
               <div className="absolute right-5 pointer-events-none text-[#757575]">
                 <svg 
                   viewBox="0 0 24 24" 
@@ -147,6 +167,21 @@ export default function LoginPage() {
                 </svg>
               </div>
             </div>
+
+            <div className="flex justify-between items-center px-1 text-xs text-gray-500">
+              <span>Solo 9 dígitos numéricos</span>
+              <span className={phoneNumber.length === 9 ? 'text-green-600 font-bold' : 'text-gray-400'}>
+                {phoneNumber.length}/9
+              </span>
+            </div>
+
+            {/* Error Message */}
+            {loginError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs flex items-start gap-2 animate-in fade-in">
+                <AlertCircle className="w-4 h-4 shrink-0 text-red-500 mt-0.5" />
+                <span className="leading-tight">{loginError}</span>
+              </div>
+            )}
           </form>
 
           {/* 5. Delivery Method Options */}
@@ -155,10 +190,7 @@ export default function LoginPage() {
               ¿Cómo prefieres recibir el código?
             </p>
 
-            {/* Options Container Box */}
             <div className="w-full bg-white border-[1.5px] border-[#E0E0E0] rounded-[12px] p-5 space-y-5">
-              
-              {/* Option 1: Por SMS */}
               <label 
                 onClick={() => setDeliveryMethod('sms')}
                 className="flex items-center gap-4 cursor-pointer group select-none"
@@ -173,9 +205,7 @@ export default function LoginPage() {
                     className="sr-only"
                   />
                   <div className={`w-[26px] h-[26px] rounded-full border-[2px] transition-colors flex items-center justify-center ${
-                    deliveryMethod === 'sms' 
-                      ? 'border-[#50A7E2]' 
-                      : 'border-[#9CA3AF] group-hover:border-[#6B7280]'
+                    deliveryMethod === 'sms' ? 'border-[#50A7E2]' : 'border-[#9CA3AF]'
                   }`}>
                     {deliveryMethod === 'sms' && (
                       <div className="w-[12px] h-[12px] rounded-full bg-[#50A7E2]" />
@@ -187,7 +217,6 @@ export default function LoginPage() {
                 </span>
               </label>
 
-              {/* Option 2: Por WhatsApp */}
               <label 
                 onClick={() => setDeliveryMethod('whatsapp')}
                 className="flex items-center gap-4 cursor-pointer group select-none"
@@ -202,9 +231,7 @@ export default function LoginPage() {
                     className="sr-only"
                   />
                   <div className={`w-[26px] h-[26px] rounded-full border-[2px] transition-colors flex items-center justify-center ${
-                    deliveryMethod === 'whatsapp' 
-                      ? 'border-[#50A7E2]' 
-                      : 'border-[#9CA3AF] group-hover:border-[#6B7280]'
+                    deliveryMethod === 'whatsapp' ? 'border-[#50A7E2]' : 'border-[#9CA3AF]'
                   }`}>
                     {deliveryMethod === 'whatsapp' && (
                       <div className="w-[12px] h-[12px] rounded-full bg-[#50A7E2]" />
@@ -215,28 +242,31 @@ export default function LoginPage() {
                   Por WhatsApp
                 </span>
               </label>
-
             </div>
           </div>
 
         </div>
 
-        {/* Bottom Section: Siguiente Button */}
+        {/* Bottom Section */}
         <div className="pt-8 pb-4 flex flex-col items-center">
           <button
             form="login-form"
             type="submit"
-            className="w-full h-[56px] rounded-full bg-[#7EC6F1] hover:bg-[#50A7E2] active:bg-[#4196D1] text-white font-semibold text-[17px] sm:text-[18px] transition-colors shadow-none flex items-center justify-center mb-4"
+            disabled={phoneNumber.length !== 9 || isSubmittingLogin}
+            className={`w-full h-[56px] rounded-full text-white font-semibold text-[17px] sm:text-[18px] transition-all flex items-center justify-center gap-2 mb-3 ${
+              phoneNumber.length === 9 && !isSubmittingLogin
+                ? 'bg-[#7EC6F1] hover:bg-[#50A7E2] active:bg-[#4196D1] cursor-pointer shadow-md'
+                : 'bg-[#B0D6F1] cursor-not-allowed opacity-75'
+            }`}
           >
-            Siguiente
-          </button>
-          
-          <button
-            onClick={() => navigate('/dashboard')}
-            type="button"
-            className="text-xs text-gray-400 hover:text-gray-600 transition-colors bg-transparent border-none"
-          >
-            skip login (dev)
+            {isSubmittingLogin ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Verificando en Base de Datos...</span>
+              </>
+            ) : (
+              <span>Siguiente</span>
+            )}
           </button>
         </div>
 

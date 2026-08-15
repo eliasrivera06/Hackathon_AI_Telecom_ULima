@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import { initialMessages } from '../../data/mockData';
-import { sendMessage, resetSessionId } from '../../services/chatService';
+import { sendMessage, resetSessionId, getSavedMessages, saveMessages } from '../../services/chatService';
 import ChatHistorySidebar from '../../components/Chat/ChatHistorySidebar';
 import ChatHeader from '../../components/Chat/ChatHeader';
 import MessageBubble from '../../components/MessageBubble/MessageBubble';
@@ -10,10 +10,8 @@ import BenefitsModal from '../../components/Modal/BenefitsModal';
 import ClaimModal from '../../components/Modal/ClaimModal';
 import { Sparkles, Loader2 } from 'lucide-react';
 
-import ChatSwitcher from '../ChatSwitcher/ChatSwitcher';
-
 export default function ChatBotPage({ webhookUrl }) {
-  const [messages, setMessages] = useState(initialMessages);
+  const [messages, setMessages] = useState(() => getSavedMessages(initialMessages));
   const [isLoading, setIsLoading] = useState(false);
   const [currentChatId, setCurrentChatId] = useState('chat-1');
   const [isMobileHistoryOpen, setIsMobileHistoryOpen] = useState(false);
@@ -23,20 +21,26 @@ export default function ChatBotPage({ webhookUrl }) {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    saveMessages(messages);
   }, [messages, isLoading]);
 
   const handleSendMessage = async (text) => {
     const userMsg = {
-      id: `msg-user-${Date.now()}`,
+      id: msg-user- + Date.now(),
       sender: 'user',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       text,
     };
-    setMessages((prev) => [...prev, userMsg]);
+    const updatedMessages = [...messages, userMsg];
+    setMessages(updatedMessages);
+    saveMessages(updatedMessages);
     setIsLoading(true);
+
     try {
       const response = await sendMessage(text, webhookUrl);
-      setMessages((prev) => [...prev, { ...response, id: `msg-ai-${Date.now()}` }]);
+      const withAiResponse = [...updatedMessages, { ...response, id: msg-ai- + Date.now() }];
+      setMessages(withAiResponse);
+      saveMessages(withAiResponse);
       if (response.showModal) setActiveModal(response.showModal);
     } catch (err) {
       console.error(err);
@@ -53,9 +57,9 @@ export default function ChatBotPage({ webhookUrl }) {
 
   const handleNewChat = () => {
     const newSession = resetSessionId();
-    setCurrentChatId(`chat-${Date.now()}`);
-    setMessages([{
-      id: `msg-welcome-${Date.now()}`,
+    setCurrentChatId(chat- + Date.now());
+    const freshWelcome = [{
+      id: msg-welcome- + Date.now(),
       sender: 'assistant',
       agentName: 'Lucía',
       agentRole: 'Asistente Inteligente de Recibos Movistar',
@@ -65,13 +69,15 @@ export default function ChatBotPage({ webhookUrl }) {
         { id: 'action-detail', label: 'Ver desglose de factura', icon: 'FileText', primary: true },
         { id: 'action-benefits', label: 'Explorar promociones', icon: 'Sparkles', primary: false },
       ],
-    }]);
-    console.log(`[ChatBotPage] Started new conversation session: ${newSession}`);
+    }];
+    setMessages(freshWelcome);
+    saveMessages(freshWelcome);
+    console.log("[ChatBotPage] Nueva sesion iniciada: " + newSession);
   };
 
   return (
-    <div className="h-[calc(100vh-5rem)] -m-4 sm:-m-6 lg:-m-8 flex overflow-hidden bg-movistar-gray relative">
-      <ChatSwitcher />
+    <div className="h-[calc(100vh-5rem)] -m-4 sm:-m-6 lg:-m-8 flex overflow-hidden bg-movistar-gray">
+
       {/* History Panel */}
       <ChatHistorySidebar
         currentChatId={currentChatId}

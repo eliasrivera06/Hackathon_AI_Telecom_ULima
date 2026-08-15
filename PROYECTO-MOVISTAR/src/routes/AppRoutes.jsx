@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
 import HomePage from '../pages/Home/HomePage';
@@ -23,7 +23,7 @@ export default function AppRoutes() {
       {/* Internal Dashboard / Web Chat Layout */}
       <Route element={<MainLayout />}>
         <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/chat-web" element={<ChatBotPage webhookUrl={import.meta.env.VITE_N8N_WEBHOOK_URL_WEB} />} />
+        <Route path="/chat-web" element={<ChatBotPage webhookUrl={(import.meta.env.VITE_MAKE_WEBHOOK_URL_WEB || import.meta.env.VITE_N8N_WEBHOOK_URL_WEB || import.meta.env.VITE_MAKE_WEBHOOK_URL)} />} />
         <Route path="/recibos" element={<DashboardPage />} />
         <Route path="/beneficios" element={<DashboardPage />} />
         <Route path="/configuracion" element={<DashboardPage />} />
