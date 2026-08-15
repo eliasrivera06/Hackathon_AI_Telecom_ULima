@@ -200,7 +200,7 @@ export default function ChatCelPage() {
                 )}
               </form>
 
-              {/* 5. Contenedor de Opciones */}
+              {/* 5. Contenedor de Opciones (SMS y WhatsApp) */}
               <div className="pt-2 space-y-2">
                 <p className="text-[14px] text-[#2B2B2B] font-normal text-left">
                   ¿Cómo prefieres recibir el código?

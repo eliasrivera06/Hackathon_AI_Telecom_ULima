@@ -5,7 +5,6 @@ import HomePage from '../pages/Home/HomePage';
 import DashboardPage from '../pages/Dashboard/DashboardPage';
 import ChatBotPage from '../pages/ChatBot/ChatBotPage';
 import ChatCelPage from '../pages/ChatCel/ChatCelPage';
-import ChatWasapPage from '../pages/ChatWasap/ChatWasapPage';
 
 export default function AppRoutes() {
   return (
@@ -16,9 +15,6 @@ export default function AppRoutes() {
       {/* Auth & Mobile App Screen */}
       <Route path="/login" element={<ChatCelPage />} />
       <Route path="/chat-cel" element={<ChatCelPage />} />
-
-      {/* Standalone WhatsApp Route */}
-      <Route path="/chat-wasap" element={<ChatWasapPage />} />
 
       {/* Internal Dashboard / Web Chat Layout */}
       <Route element={<MainLayout />}>

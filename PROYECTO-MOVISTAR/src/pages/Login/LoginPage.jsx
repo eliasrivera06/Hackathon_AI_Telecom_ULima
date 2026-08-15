@@ -205,7 +205,7 @@ export default function LoginPage() {
                     className="sr-only"
                   />
                   <div className={`w-[26px] h-[26px] rounded-full border-[2px] transition-colors flex items-center justify-center ${
-                    deliveryMethod === 'sms' ? 'border-[#50A7E2]' : 'border-[#9CA3AF]'
+                    deliveryMethod === 'sms' ? 'border-[#50A7E2]' : 'border-[#9CA3AF] group-hover:border-[#6B7280]'
                   }`}>
                     {deliveryMethod === 'sms' && (
                       <div className="w-[12px] h-[12px] rounded-full bg-[#50A7E2]" />
@@ -231,7 +231,7 @@ export default function LoginPage() {
                     className="sr-only"
                   />
                   <div className={`w-[26px] h-[26px] rounded-full border-[2px] transition-colors flex items-center justify-center ${
-                    deliveryMethod === 'whatsapp' ? 'border-[#50A7E2]' : 'border-[#9CA3AF]'
+                    deliveryMethod === 'whatsapp' ? 'border-[#50A7E2]' : 'border-[#9CA3AF] group-hover:border-[#6B7280]'
                   }`}>
                     {deliveryMethod === 'whatsapp' && (
                       <div className="w-[12px] h-[12px] rounded-full bg-[#50A7E2]" />

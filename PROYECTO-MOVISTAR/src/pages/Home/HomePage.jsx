@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ChatSwitcher from '../ChatSwitcher/ChatSwitcher';
 import {
@@ -42,7 +42,7 @@ export default function HomePage() {
           </div>
           <div>
             <span className="text-blue-100 hover:text-white cursor-pointer transition-colors text-[11px] sm:text-xs">
-              Información a Abonados y Usuarios
+              InformaciÃ³n a Abonados y Usuarios
             </span>
           </div>
         </div>
@@ -76,11 +76,11 @@ export default function HomePage() {
                 <ChevronDown className="w-4 h-4 opacity-80" />
               </div>
               <div className="flex items-center gap-1 hover:text-blue-100 cursor-pointer py-2">
-                <span>Móvil</span>
+                <span>MÃ³vil</span>
                 <ChevronDown className="w-4 h-4 opacity-80" />
               </div>
               <div className="hover:text-blue-100 cursor-pointer py-2">
-                <span>Atención al cliente</span>
+                <span>AtenciÃ³n al cliente</span>
               </div>
             </nav>
           </div>
@@ -150,12 +150,12 @@ export default function HomePage() {
           {/* HERO LEFT COLUMN: TEXT + CTA */}
           <div className="lg:col-span-4 text-center lg:text-left space-y-4">
             <p className="text-slate-600 font-semibold text-xs sm:text-sm tracking-wide">
-              ¡Más de 2 millones de usuarios ya la están disfrutando!
+              Â¡MÃ¡s de 2 millones de usuarios ya la estÃ¡n disfrutando!
             </p>
 
             <h1 className="text-slate-800 leading-tight">
               <span className="text-2xl sm:text-3xl font-extrabold text-[#019DF4] block">
-                ¡Tu <span className="text-[#019DF4]">App Mi</span>
+                Â¡Tu <span className="text-[#019DF4]">App Mi</span>
               </span>
               <span className="text-3xl sm:text-4xl font-extrabold text-[#019DF4]">
                 Movistar
@@ -172,12 +172,12 @@ export default function HomePage() {
             </h1>
 
             <p className="text-slate-500 font-medium text-sm pt-2">
-              Y tú, ¿ya la descargaste?
+              Y tÃº, Â¿ya la descargaste?
             </p>
 
             <div className="pt-2">
               <button className="bg-[#E13C80] hover:bg-[#c62f6e] text-white px-8 py-3 rounded-full font-bold text-base shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer">
-                Descárgala aquí
+                DescÃ¡rgala aquÃ­
               </button>
             </div>
           </div>
@@ -213,7 +213,7 @@ export default function HomePage() {
                     <Wrench className="w-6 h-6" />
                   </div>
                   <span className="text-[11px] font-semibold text-slate-700 leading-tight">
-                    Diagnosticar y seguimiento <span className="font-bold block">a una Avería</span>
+                    Diagnosticar y seguimiento <span className="font-bold block">a una AverÃ­a</span>
                   </span>
                 </div>
 
@@ -273,10 +273,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 5. SECTION BELOW HERO: ¿Cómo ingresar a tu App Mi Movistar? */}
+      {/* 5. SECTION BELOW HERO: Â¿CÃ³mo ingresar a tu App Mi Movistar? */}
       <section className="py-12 px-4 sm:px-8 max-w-7xl mx-auto">
         <h2 className="text-center text-2xl sm:text-3xl font-normal text-slate-800">
-          ¿Cómo ingresar a tu <span className="font-bold text-[#003B5C]">App Mi Movistar</span>?
+          Â¿CÃ³mo ingresar a tu <span className="font-bold text-[#003B5C]">App Mi Movistar</span>?
         </h2>
 
         {/* TABS */}
@@ -328,7 +328,7 @@ export default function HomePage() {
               Ingresa tu DNI o RUC
             </h3>
             <p className="text-slate-600 text-sm leading-relaxed">
-              Inicia sesión de forma segura con el documento de identidad registrado en tu contrato.
+              Inicia sesiÃ³n de forma segura con el documento de identidad registrado en tu contrato.
             </p>
           </div>
 
@@ -341,7 +341,7 @@ export default function HomePage() {
               Gestiona tus servicios
             </h3>
             <p className="text-slate-600 text-sm leading-relaxed">
-              Revisa tus recibos, explicaciones inteligentes con Lucía AI, reporta averías y activa promociones.
+              Revisa tus recibos, explicaciones inteligentes con LucÃ­a AI, reporta averÃ­as y activa promociones.
             </p>
           </div>
 
@@ -353,7 +353,7 @@ export default function HomePage() {
             onClick={() => navigate('/login')}
             className="inline-flex items-center gap-2 bg-[#019DF4] hover:bg-[#0086D1] text-white px-7 py-3 rounded-full font-bold text-sm shadow-md transition-transform hover:scale-105 active:scale-95"
           >
-            <span>Iniciar Sesión en Mi Movistar</span>
+            <span>Iniciar SesiÃ³n en Mi Movistar</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -364,11 +364,11 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center text-xs gap-4">
           <div className="flex items-center space-x-2">
             <span className="font-extrabold text-lg text-white">movistar</span>
-            <span className="text-slate-400">© 2026 Telefónica del Perú</span>
+            <span className="text-slate-400">Â© 2026 TelefÃ³nica del PerÃº</span>
           </div>
           <div className="flex flex-wrap gap-4 text-slate-400">
-            <span className="hover:underline cursor-pointer">Términos y Condiciones</span>
-            <span className="hover:underline cursor-pointer">Política de Privacidad</span>
+            <span className="hover:underline cursor-pointer">TÃ©rminos y Condiciones</span>
+            <span className="hover:underline cursor-pointer">PolÃ­tica de Privacidad</span>
             <span className="hover:underline cursor-pointer">Centro de Ayuda</span>
           </div>
         </div>
@@ -381,14 +381,9 @@ export default function HomePage() {
         <Accessibility className="w-6 h-6" />
       </button>
 
-      {/* Bottom Right: Floating WhatsApp "Más opciones" */}
-      <button className="fixed bottom-6 right-6 z-50 bg-[#59B600] hover:bg-[#4ea200] text-white px-4 py-2.5 rounded-full shadow-2xl flex items-center gap-2.5 font-bold text-sm transition-transform hover:scale-105 active:scale-95 cursor-pointer">
-        <span className="text-xs">Más opciones</span>
-        <div className="w-7 h-7 rounded-full bg-white text-[#59B600] flex items-center justify-center shadow-inner">
-          <PhoneCall className="w-4 h-4 fill-current" />
-        </div>
-      </button>
+      
 
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 export default function ChatSwitcher() {
@@ -9,8 +9,6 @@ export default function ChatSwitcher() {
   let activeView = 'web';
   if (location.pathname.includes('/chat-cel') || location.pathname === '/login') {
     activeView = 'cel';
-  } else if (location.pathname.includes('/chat-wasap')) {
-    activeView = 'wasap';
   } else {
     activeView = 'web';
   }
@@ -27,19 +25,11 @@ export default function ChatSwitcher() {
       </button>
       <button
         onClick={() => navigate('/login')}
-        className={`px-4 py-1.5 text-sm font-semibold border-l border-r border-slate-200 transition-colors cursor-pointer ${
+        className={`px-4 py-1.5 text-sm font-semibold border-l border-slate-200 transition-colors cursor-pointer ${
           activeView === 'cel' ? 'bg-[#019df4] text-white' : 'text-slate-600 hover:bg-slate-100'
         }`}
       >
         Cel
-      </button>
-      <button
-        onClick={() => navigate('/chat-wasap')}
-        className={`px-4 py-1.5 text-sm font-semibold transition-colors cursor-pointer ${
-          activeView === 'wasap' ? 'bg-[#019df4] text-white' : 'text-slate-600 hover:bg-slate-100'
-        }`}
-      >
-        Wasap
       </button>
     </div>
   );
