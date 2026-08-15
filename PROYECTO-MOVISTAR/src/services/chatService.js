@@ -68,7 +68,7 @@ export const getSavedMessages = (defaultInitialMessages = []) => {
     const saved = localStorage.getItem(CHAT_MESSAGES_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.id !== 'msg-1') {
         return parsed;
       }
     }

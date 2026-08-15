@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Send, Sparkles, Paperclip } from 'lucide-react';
 
 export default function ChatInput({ onSendMessage, isLoading }) {
@@ -73,10 +73,6 @@ export default function ChatInput({ onSendMessage, isLoading }) {
           <Send className="w-4 h-4" />
         </button>
       </form>
-
-      <p className="text-[10px] text-center text-slate-400 font-medium">
-        Lucía AI analiza tus facturas oficiales de Movistar · MVP listo para Gemini, n8n y Supabase.
-      </p>
     </div>
   );
 }

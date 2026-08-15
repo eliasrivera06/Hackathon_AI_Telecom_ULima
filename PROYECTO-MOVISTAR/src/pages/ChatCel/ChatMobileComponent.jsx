@@ -1,6 +1,5 @@
 ﻿import React, { useState, useRef, useEffect } from 'react';
-import { initialMessages } from '../../data/mockData';
-import { sendMessage, resetSessionId, getSavedMessages, saveMessages } from '../../services/chatService';
+import { sendMessage, resetSessionId, getSavedMessages, saveMessages, getUserPhone } from '../../services/chatService';
 import MessageBubble from '../../components/MessageBubble/MessageBubble';
 import ChatInput from '../../components/Chat/ChatInput';
 import DetailModal from '../../components/Modal/DetailModal';
@@ -8,11 +7,26 @@ import BenefitsModal from '../../components/Modal/BenefitsModal';
 import ClaimModal from '../../components/Modal/ClaimModal';
 import { Sparkles, Loader2, RotateCcw } from 'lucide-react';
 
+const getCleanWelcomeMessage = () => [
+  {
+    id: 'msg-welcome-' + Date.now(),
+    sender: 'assistant',
+    agentName: 'Lucía',
+    agentRole: 'Asistente de Recibos Movistar',
+    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    text: '¡Hola! Soy **Lucía**, tu asistente inteligente de Movistar. ¿En qué te puedo ayudar hoy con tu recibo o plan?',
+    suggestedActions: [
+      { id: "action-detail", label: "Ver desglose de factura", icon: "FileText", primary: true },
+      { id: "action-benefits", label: "Consultar promociones", icon: "Sparkles", primary: false }
+    ]
+  }
+];
+
 export default function ChatMobileComponent({ webhookUrl }) {
-  // Cargar historial persistido de localStorage para mantener la memoria
-  const [messages, setMessages] = useState(() => getSavedMessages(initialMessages));
+  const [messages, setMessages] = useState(() => getSavedMessages(getCleanWelcomeMessage()));
   const [isLoading, setIsLoading] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
+  const userPhone = getUserPhone();
 
   const messagesEndRef = useRef(null);
 
@@ -23,10 +37,10 @@ export default function ChatMobileComponent({ webhookUrl }) {
 
   const handleSendMessage = async (text) => {
     const userMsg = {
-      id: msg-user- + Date.now(),
+      id: 'msg-user-' + Date.now(),
       sender: 'user',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      text,
+      text: text,
     };
     
     const updatedMessages = [...messages, userMsg];
@@ -36,12 +50,12 @@ export default function ChatMobileComponent({ webhookUrl }) {
 
     try {
       const response = await sendMessage(text, webhookUrl);
-      const withAiResponse = [...updatedMessages, { ...response, id: msg-ai- + Date.now() }];
+      const withAiResponse = [...updatedMessages, { ...response, id: 'msg-ai-' + Date.now() }];
       setMessages(withAiResponse);
       saveMessages(withAiResponse);
-      if (response.showModal) setActiveModal(response.showModal);
+      if (response && response.showModal) setActiveModal(response.showModal);
     } catch (err) {
-      console.error(err);
+      console.error('[ChatMobileComponent] Error enviando mensaje:', err);
     } finally {
       setIsLoading(false);
     }
@@ -49,18 +63,7 @@ export default function ChatMobileComponent({ webhookUrl }) {
 
   const handleResetChat = () => {
     resetSessionId();
-    const freshWelcome = [{
-      id: msg-welcome- + Date.now(),
-      sender: 'assistant',
-      agentName: 'Lucía',
-      agentRole: 'Asistente Inteligente de Recibos Movistar',
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      text: '¡Hola! Soy Lucía. He iniciado una nueva sesión. ¿En qué puedo ayudarte hoy con tu facturación?',
-      suggestedActions: [
-        { id: 'action-detail', label: 'Ver desglose de factura', icon: 'FileText', primary: true },
-        { id: 'action-benefits', label: 'Explorar promociones', icon: 'Sparkles', primary: false },
-      ],
-    }];
+    const freshWelcome = getCleanWelcomeMessage();
     setMessages(freshWelcome);
     saveMessages(freshWelcome);
   };
@@ -82,13 +85,15 @@ export default function ChatMobileComponent({ webhookUrl }) {
           </div>
           <div>
             <p className="text-xs font-bold text-slate-800 leading-none">Lucía AI</p>
-            <span className="text-[9px] text-green-600 font-semibold">Memoria Activa</span>
+            <span className="text-[9px] text-green-600 font-semibold">
+              {userPhone ? `Línea: ${userPhone}` : 'En Línea'}
+            </span>
           </div>
         </div>
         <button
           onClick={handleResetChat}
           title="Reiniciar chat y memoria"
-          className="p-1.5 text-gray-400 hover:text-slate-600 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-1 text-[11px]"
+          className="p-1.5 text-gray-400 hover:text-slate-600 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-1 text-[11px] cursor-pointer"
         >
           <RotateCcw className="w-3.5 h-3.5" />
           <span>Nueva Sesión</span>
@@ -97,20 +102,6 @@ export default function ChatMobileComponent({ webhookUrl }) {
 
       {/* Message Stream */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {/* Context Banner */}
-        <div className="p-3 rounded-2xl border text-xs flex flex-col font-sans mb-3"
-          style={{ background: 'linear-gradient(90deg, rgba(1,157,244,0.07), rgba(225,60,128,0.07))', borderColor: 'rgba(1,157,244,0.20)' }}>
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded-full text-white flex items-center justify-center font-bold shrink-0"
-              style={{ background: 'linear-gradient(135deg, #00A859, #019df4)' }}>
-              <Sparkles className="w-3 h-3" />
-            </div>
-            <p style={{ color: '#013d5e' }} className="leading-tight text-[11px]">
-              <strong>Lucía AI:</strong> Analizando recibo de <strong>Julio 2024 (S/ 120.00)</strong>
-            </p>
-          </div>
-        </div>
-
         {/* Messages */}
         {messages.map((msg) => (
           <MessageBubble

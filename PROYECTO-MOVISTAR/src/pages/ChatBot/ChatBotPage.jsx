@@ -1,6 +1,5 @@
 ﻿import React, { useState, useRef, useEffect } from 'react';
-import { initialMessages } from '../../data/mockData';
-import { sendMessage, resetSessionId, getSavedMessages, saveMessages } from '../../services/chatService';
+import { sendMessage, resetSessionId, getSavedMessages, saveMessages, getUserPhone } from '../../services/chatService';
 import ChatHistorySidebar from '../../components/Chat/ChatHistorySidebar';
 import ChatHeader from '../../components/Chat/ChatHeader';
 import MessageBubble from '../../components/MessageBubble/MessageBubble';
@@ -10,12 +9,28 @@ import BenefitsModal from '../../components/Modal/BenefitsModal';
 import ClaimModal from '../../components/Modal/ClaimModal';
 import { Sparkles, Loader2 } from 'lucide-react';
 
+const getCleanWelcomeMessage = () => [
+  {
+    id: 'msg-welcome-' + Date.now(),
+    sender: 'assistant',
+    agentName: 'Lucía',
+    agentRole: 'Asistente Inteligente de Recibos Movistar',
+    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    text: '¡Hola! Soy **Lucía**, tu asistente inteligente de facturación Movistar. ¿Qué consulta o duda tienes sobre tu recibo hoy?',
+    suggestedActions: [
+      { id: 'action-detail', label: 'Ver desglose de factura', icon: 'FileText', primary: true },
+      { id: 'action-benefits', label: 'Explorar promociones', icon: 'Sparkles', primary: false },
+    ],
+  }
+];
+
 export default function ChatBotPage({ webhookUrl }) {
-  const [messages, setMessages] = useState(() => getSavedMessages(initialMessages));
+  const [messages, setMessages] = useState(() => getSavedMessages(getCleanWelcomeMessage()));
   const [isLoading, setIsLoading] = useState(false);
   const [currentChatId, setCurrentChatId] = useState('chat-1');
   const [isMobileHistoryOpen, setIsMobileHistoryOpen] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
+  const userPhone = getUserPhone();
 
   const messagesEndRef = useRef(null);
 
@@ -26,10 +41,10 @@ export default function ChatBotPage({ webhookUrl }) {
 
   const handleSendMessage = async (text) => {
     const userMsg = {
-      id: msg-user- + Date.now(),
+      id: 'msg-user-' + Date.now(),
       sender: 'user',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      text,
+      text: text,
     };
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
@@ -38,12 +53,12 @@ export default function ChatBotPage({ webhookUrl }) {
 
     try {
       const response = await sendMessage(text, webhookUrl);
-      const withAiResponse = [...updatedMessages, { ...response, id: msg-ai- + Date.now() }];
+      const withAiResponse = [...updatedMessages, { ...response, id: 'msg-ai-' + Date.now() }];
       setMessages(withAiResponse);
       saveMessages(withAiResponse);
-      if (response.showModal) setActiveModal(response.showModal);
+      if (response && response.showModal) setActiveModal(response.showModal);
     } catch (err) {
-      console.error(err);
+      console.error('[ChatBotPage] Error enviando mensaje:', err);
     } finally {
       setIsLoading(false);
     }
@@ -57,22 +72,11 @@ export default function ChatBotPage({ webhookUrl }) {
 
   const handleNewChat = () => {
     const newSession = resetSessionId();
-    setCurrentChatId(chat- + Date.now());
-    const freshWelcome = [{
-      id: msg-welcome- + Date.now(),
-      sender: 'assistant',
-      agentName: 'Lucía',
-      agentRole: 'Asistente Inteligente de Recibos Movistar',
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      text: '¡Hola Carlos! Soy Lucía. He abierto una nueva sesión de análisis. ¿Qué consulta o recibo deseas que revisemos hoy?',
-      suggestedActions: [
-        { id: 'action-detail', label: 'Ver desglose de factura', icon: 'FileText', primary: true },
-        { id: 'action-benefits', label: 'Explorar promociones', icon: 'Sparkles', primary: false },
-      ],
-    }];
+    setCurrentChatId('chat-' + Date.now());
+    const freshWelcome = getCleanWelcomeMessage();
     setMessages(freshWelcome);
     saveMessages(freshWelcome);
-    console.log("[ChatBotPage] Nueva sesion iniciada: " + newSession);
+    console.log('[ChatBotPage] Nueva sesión iniciada:', newSession);
   };
 
   return (
@@ -107,11 +111,11 @@ export default function ChatBotPage({ webhookUrl }) {
                 <Sparkles className="w-3.5 h-3.5" />
               </div>
               <p style={{ color: '#013d5e' }}>
-                <strong>Lucía AI facturación:</strong> Analizando recibo de <strong>Julio 2024 (S/ 120.00)</strong>
+                <strong>Lucía AI facturación:</strong> {userPhone ? `Línea activa: ${userPhone}` : 'Asistente en vivo'}
               </p>
             </div>
             <span className="hidden sm:inline-block text-[10px] bg-white px-2 py-0.5 rounded-md font-bold text-slate-500 border border-slate-200">
-              ID Cliente: CLI-2024-998
+              ID: {userPhone || 'CLI-MOVISTAR'}
             </span>
           </div>
 
@@ -133,8 +137,8 @@ export default function ChatBotPage({ webhookUrl }) {
                 <Loader2 className="w-4 h-4 animate-spin" />
               </div>
               <div className="space-y-1">
-                <span className="text-xs font-bold block" style={{ color: '#013d5e' }}>Lucía está procesando tu factura...</span>
-                <span className="text-[10px] text-slate-400">Verificando rubros y variaciones tarifarias</span>
+                <span className="text-xs font-bold block" style={{ color: '#013d5e' }}>Lucía está procesando tu consulta...</span>
+                <span className="text-[10px] text-slate-400">Consultando información oficial de facturación</span>
               </div>
             </div>
           )}

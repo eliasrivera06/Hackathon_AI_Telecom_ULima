@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Sparkles, FileText, Gift, HelpCircle } from 'lucide-react';
 import ReceiptComparisonCard from '../Receipts/ReceiptComparisonCard';
 
@@ -29,7 +29,7 @@ export default function MessageBubble({ message, onActionClick, onOpenDetailModa
         border: 'none',
       };
     }
-    // Secondary — rosa
+    // Secondary - rosa
     return {
       background: 'rgba(225,60,128,0.08)',
       color: '#c0306b',
@@ -69,7 +69,7 @@ export default function MessageBubble({ message, onActionClick, onOpenDetailModa
     <div className="flex justify-start mb-6 animate-slide-up">
       <div className="flex items-start gap-3 max-w-[95%] sm:max-w-[85%] lg:max-w-[78%]">
 
-        {/* Lucía Avatar — gradiente verde → azul → rosa */}
+        {/* Lucía Avatar - gradiente verde -> azul */}
         <div className="w-10 h-10 rounded-2xl text-white flex items-center justify-center font-bold shrink-0 mt-1 ring-2 ring-white"
           style={{ background: 'linear-gradient(135deg, #00A859, #019df4)', boxShadow: '0 0 14px rgba(1,157,244,0.35)' }}>
           <Sparkles className="w-5 h-5 text-white animate-pulse" />
@@ -108,7 +108,7 @@ export default function MessageBubble({ message, onActionClick, onOpenDetailModa
                     <button
                       key={action.id}
                       onClick={() => onActionClick && onActionClick(action.id)}
-                      className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all transform hover:-translate-y-0.5 active:translate-y-0"
+                      className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
                       style={getActionStyles(action)}
                     >
                       {getActionIcon(action.icon)}

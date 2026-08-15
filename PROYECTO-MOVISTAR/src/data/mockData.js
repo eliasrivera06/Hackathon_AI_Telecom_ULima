@@ -147,25 +147,15 @@ export const chatHistory = [
 
 export const initialMessages = [
   {
-    id: "msg-1",
-    sender: "user",
-    timestamp: "10:14 AM",
-    text: "¿Por qué aumentó mi recibo de este mes?"
-  },
-  {
-    id: "msg-2",
+    id: "msg-welcome-init",
     sender: "assistant",
-    agentName: "Lucía",
+    agentName: "Luc�a",
     agentRole: "Asistente Inteligente de Recibos Movistar",
-    timestamp: "10:14 AM",
-    text: "Hola Carlos, he analizado en detalle tu facturación de **Julio 2024** (Recibo `REC-2024-07-88392`).\n\nTu recibo aumentó **S/ 20.00** respecto al mes anterior porque el **15 de julio finalizó la Promoción de Bienvenida** (-S/ 20/mes) que tuviste activa durante los últimos 6 meses. Tu plan ha retornado a su tarifa base regular contratada.",
-    hasVisualComparison: true,
-    hasRootCauseCard: true,
-    hasActionChips: true,
+    timestamp: "Ahora",
+    text: "�Hola! Soy **Luc�a**, tu asistente inteligente de Movistar. �En qu� te puedo ayudar hoy con tu recibo o plan?",
     suggestedActions: [
-      { id: "action-detail", label: "Ver desglose completo", icon: "FileText", primary: true },
-      { id: "action-benefits", label: "Revisar beneficios para reducir mi recibo", icon: "Sparkles", primary: false },
-      { id: "action-claim", label: "Registrar consulta en canal oficial", icon: "HelpCircle", primary: false }
+      { id: "action-detail", label: "Ver desglose de factura", icon: "FileText", primary: true },
+      { id: "action-benefits", label: "Consultar promociones", icon: "Sparkles", primary: false }
     ]
   }
 ];
