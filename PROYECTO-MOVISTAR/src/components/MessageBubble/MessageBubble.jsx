@@ -1,9 +1,21 @@
 import React from 'react';
-import { Sparkles, FileText, Gift, HelpCircle } from 'lucide-react';
+import { Sparkles, FileText, Gift, HelpCircle, Volume2 } from 'lucide-react';
 import ReceiptComparisonCard from '../Receipts/ReceiptComparisonCard';
 
 export default function MessageBubble({ message, onActionClick, onOpenDetailModal }) {
   const isUser = message.sender === 'user';
+
+  const handleSpeak = (text) => {
+    if (!text) return;
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'es-ES';
+      window.speechSynthesis.speak(utterance);
+    } else {
+      console.warn('Web Speech API is not supported in this browser.');
+    }
+  };
 
   const formatText = (text) => {
     if (!text) return null;
@@ -110,6 +122,17 @@ export default function MessageBubble({ message, onActionClick, onOpenDetailModa
           <div className="bg-white p-4 sm:p-5 rounded-2xl rounded-tl-none border border-movistar-gray-border text-slate-700 text-sm leading-relaxed chat-bubble-shadow whitespace-pre-wrap break-words [overflow-wrap:anywhere] min-w-0 overflow-hidden">
             <div className="space-y-1">
               {formatText(message.text)}
+            </div>
+
+            <div className="mt-3 flex justify-end">
+              <button 
+                onClick={() => handleSpeak(message.text)}
+                className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-[#019df4] transition-colors py-1 px-2 rounded-lg hover:bg-blue-50/50"
+                title="Escuchar mensaje"
+              >
+                <Volume2 className="w-4 h-4" />
+                Escuchar mensaje
+              </button>
             </div>
 
             {/* Visual Comparison Card - Only if explicitly passed from Make */}
