@@ -30,7 +30,7 @@ export default function DashboardPage() {
               Hola, {userProfile.name}
             </h1>
             <p className="text-white/70 text-sm max-w-xl leading-relaxed">
-              Bienvenido a tu resumen de servicios. Revisa tu consumo, estado de línea y la explicación de tu factura con <strong className="text-white">Lucía AI</strong>.
+              Bienvenido a tu resumen de servicios. Revisa tu consumo, estado de línea y la explicación de tu factura con <strong className="text-white">Lucio AI</strong>.
             </p>
           </div>
 
@@ -41,7 +41,7 @@ export default function DashboardPage() {
             style={{ background: 'linear-gradient(90deg, #00A859, #e13c80)', boxShadow: '0 0 20px rgba(225,60,128,0.30)' }}
           >
             <Sparkles className="w-4 h-4 text-yellow-200" />
-            <span>Consultar con Lucía AI</span>
+            <span>Consultar con Lucio AI</span>
           </button>
         </div>
       </div>
@@ -117,7 +117,7 @@ export default function DashboardPage() {
             className="w-full py-2 px-3 rounded-xl text-white font-bold text-xs transition-colors flex items-center justify-between"
             style={{ background: 'linear-gradient(90deg, #019df4, #e13c80)' }}
           >
-            <span>Ver Beneficios con Lucía</span>
+            <span>Ver Beneficios con Lucio</span>
             <ChevronRight className="w-4 h-4 text-white" />
           </button>
         </div>

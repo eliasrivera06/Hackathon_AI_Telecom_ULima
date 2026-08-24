@@ -1,8 +1,16 @@
-﻿import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ChatMobileComponent from './ChatMobileComponent';
 import ChatSwitcher from '../ChatSwitcher/ChatSwitcher';
-import { verifyLoginWithDatabase, getUserPhone, setUserPhone, setSubscriberKey } from '../../services/chatService';
+import { 
+  verifyLoginWithDatabase, 
+  getUserPhone, 
+  setUserPhone, 
+  setSubscriberKey,
+  getSubscriberKey,
+  fetchClientBillingInfo,
+  getStoredBillingInfo
+} from '../../services/chatService';
 import { Phone, User, MessageCircle, MoreHorizontal, AlertCircle, Loader2, Search, LogOut } from 'lucide-react';
 
 export default function ChatCelPage() {
@@ -17,6 +25,40 @@ export default function ChatCelPage() {
   const [deliveryMethod, setDeliveryMethod] = useState('sms'); // 'sms' | 'whatsapp'
   const [isSubmittingLogin, setIsSubmittingLogin] = useState(false);
   const [loginError, setLoginError] = useState(null);
+
+  // Estado dinámico de facturación conectado a la base de datos
+  const [billingInfo, setBillingInfo] = useState(() => {
+    const activePhone = getUserPhone();
+    return getStoredBillingInfo(activePhone) || {
+      fechaCorte: '17/07/2026',
+      fechaVencimiento: '05/07/2026',
+      saldoAPagar: 'S/ 83.99',
+      venceTexto: 'Vence el 05/07/2026',
+      planName: 'Movistar Plus 4Gb',
+      gbLibres: '3.5'
+    };
+  });
+  const [isLoadingBilling, setIsLoadingBilling] = useState(false);
+
+  // Sincronizar datos de facturación desde la base de datos cuando el usuario está en el inicio
+  useEffect(() => {
+    const activePhone = phoneNumber || getUserPhone();
+    if (activeTab === 'home' && activePhone) {
+      let isMounted = true;
+      const loadBilling = async () => {
+        setIsLoadingBilling(true);
+        const data = await fetchClientBillingInfo(activePhone, getSubscriberKey());
+        if (isMounted && data) {
+          setBillingInfo(data);
+        }
+        if (isMounted) {
+          setIsLoadingBilling(false);
+        }
+      };
+      loadBilling();
+      return () => { isMounted = false; };
+    }
+  }, [activeTab, phoneNumber]);
 
   // Sanitizar entrada: solo dígitos numéricos y máximo 9 dígitos
   const handlePhoneChange = (e) => {
@@ -41,6 +83,9 @@ export default function ChatCelPage() {
 
     if (result.success) {
       setActiveTab('home');
+      fetchClientBillingInfo(phoneNumber, result.data?.subscriber_key || result.data?.subscriberKey).then((data) => {
+        if (data) setBillingInfo(data);
+      });
     } else {
       setLoginError(result.error || 'El número no se encuentra registrado en nuestra base de datos.');
     }
@@ -320,22 +365,28 @@ export default function ChatCelPage() {
                   
                   {/* Plan Info Card */}
                   <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 text-center">
-                    <p className="text-xs font-semibold text-gray-500 mb-1">Tu plan es Movistar Plus 4Gb</p>
+                    <p className="text-xs font-semibold text-gray-500 mb-1">
+                      Tu plan es {billingInfo.planName || 'Movistar Plus 4Gb'}
+                    </p>
                     <div className="flex justify-between border-t border-b border-gray-100 py-2.5 my-2.5">
                       <div>
                         <p className="text-[10px] text-gray-400">Fecha de corte:</p>
-                        <p className="text-xs font-bold text-gray-700">24/06/2026</p>
+                        <p className="text-xs font-bold text-gray-700">
+                          {isLoadingBilling ? 'Cargando...' : (billingInfo.fechaCorte || '17/07/2026')}
+                        </p>
                       </div>
                       <div className="border-l border-gray-200" />
                       <div>
                         <p className="text-[10px] text-gray-400">Línea Verificada</p>
-                        <p className="text-xs font-bold text-green-600">{phoneNumber || '998877665'}</p>
+                        <p className="text-xs font-bold text-green-600">{phoneNumber || '954808356'}</p>
                       </div>
                     </div>
                     <div className="flex justify-between items-center text-left pt-1">
                       <div>
                         <p className="text-sm text-gray-600">Saldo a pagar</p>
-                        <p className="text-xl font-extrabold text-slate-800">S/ 79.90</p>
+                        <p className="text-xl font-extrabold text-slate-800">
+                          {isLoadingBilling ? 'S/ ...' : (billingInfo.saldoAPagar || 'S/ 83.99')}
+                        </p>
                       </div>
                       <button 
                         onClick={() => {}}
@@ -345,7 +396,7 @@ export default function ChatCelPage() {
                       </button>
                     </div>
                     <p className="text-left text-[11px] text-amber-600 mt-2 font-semibold flex items-center gap-1">
-                      <span>•</span> Vence en 4 días
+                      <span>•</span> {isLoadingBilling ? 'Actualizando vencimiento...' : (billingInfo.venceTexto || `Vence el ${billingInfo.fechaVencimiento || '05/07/2026'}`)}
                     </p>
                   </div>
 
@@ -387,7 +438,7 @@ export default function ChatCelPage() {
                         <MessageCircle className="w-5 h-5 text-white" />
                       </div>
                       <div>
-                        <p className="font-bold text-sm">Lucía AI - Asistente</p>
+                        <p className="font-bold text-sm">Lucio AI - Asistente</p>
                         <p className="text-xs text-blue-100">Entiende tu recibo con memoria</p>
                       </div>
                     </div>
@@ -442,7 +493,7 @@ export default function ChatCelPage() {
                     ✓
                   </div>
                 </div>
-                <span className="text-[10px] font-semibold">Lucía AI</span>
+                <span className="text-[10px] font-semibold">Lucio AI</span>
               </button>
               
               <button 

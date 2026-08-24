@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ChatSwitcher from '../ChatSwitcher/ChatSwitcher';
 import {
@@ -341,7 +341,7 @@ export default function HomePage() {
               Gestiona tus servicios
             </h3>
             <p className="text-slate-600 text-sm leading-relaxed">
-              Revisa tus recibos, explicaciones inteligentes con Lucía AI, reporta averías y activa promociones.
+              Revisa tus recibos, explicaciones inteligentes con Lucio AI, reporta averías y activa promociones.
             </p>
           </div>
 

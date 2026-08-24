@@ -15,7 +15,7 @@ import {
 export default function Sidebar({ isOpen, onClose }) {
   const navItems = [
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, badge: null },
-    { label: 'Lucía - Web Chat', path: '/chat-web', icon: Sparkles, badge: 'IA Activa', badgeStyle: { background: '#00A859', color: '#fff' } },
+    { label: 'Lucio - Web Chat', path: '/chat-web', icon: Sparkles, badge: 'IA Activa', badgeStyle: { background: '#00A859', color: '#fff' } },
     { label: 'Mis Recibos', path: '/recibos', icon: Receipt, badge: null },
     { label: 'Beneficios de Plan', path: '/beneficios', icon: Gift, badge: '3 Nuevos', badgeStyle: { background: '#e13c80', color: '#fff' } },
     { label: 'Configuración', path: '/configuracion', icon: Settings, badge: null },
@@ -40,7 +40,7 @@ export default function Sidebar({ isOpen, onClose }) {
         <div>
           {/* Mobile Header */}
           <div className="p-4 lg:hidden flex items-center justify-between border-b border-slate-100">
-            <span className="font-bold text-sm" style={{ color: '#019df4' }}>Movistar Lucía AI</span>
+            <span className="font-bold text-sm" style={{ color: '#019df4' }}>Movistar Lucio AI</span>
             <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100">
               <X className="w-5 h-5" />
             </button>
@@ -85,7 +85,7 @@ export default function Sidebar({ isOpen, onClose }) {
           </div>
         </div>
 
-        {/* Bottom: Widget Lucía + Cerrar Sesión */}
+        {/* Bottom: Widget Lucio + Cerrar Sesión */}
         <div className="p-4 space-y-3">
           <div className="p-3.5 rounded-2xl relative overflow-hidden shadow-movistar-md text-white"
             style={{ background: 'linear-gradient(135deg, #013d5e 0%, #019df4 100%)' }}>
@@ -96,7 +96,7 @@ export default function Sidebar({ isOpen, onClose }) {
               <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#00A859' }}>
                 <Sparkles className="w-4 h-4 text-white" />
               </div>
-              <span className="text-xs font-bold tracking-wide">Lucía AI Active</span>
+              <span className="text-xs font-bold tracking-wide">Lucio AI Active</span>
             </div>
 
             <p className="text-xs text-white/80 leading-relaxed mb-3">

@@ -36,7 +36,7 @@ export default function Navbar({ onToggleSidebar }) {
                 <span className="font-extrabold text-xl tracking-tight text-white font-sans flex items-center gap-1.5">
                   movistar
                   <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-white/15 text-white border border-white/20">
-                    Lucía AI
+                    Lucio AI
                   </span>
                 </span>
                 <span className="text-[11px] text-white/60 tracking-wide font-medium">
@@ -55,7 +55,7 @@ export default function Navbar({ onToggleSidebar }) {
                 style={{ background: 'linear-gradient(90deg, #00A859 0%, #e13c80 100%)', color: 'white' }}
               >
                 <Sparkles className="w-4 h-4 text-yellow-200" />
-                <span>Consultar a Lucía AI</span>
+                <span>Consultar a Lucio AI</span>
                 <span className="ml-1 text-[11px] bg-white/20 px-2 py-0.5 rounded-full font-bold">
                   Explicar recibo
                 </span>

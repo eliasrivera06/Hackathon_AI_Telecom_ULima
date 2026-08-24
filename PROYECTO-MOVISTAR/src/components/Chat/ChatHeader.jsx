@@ -6,7 +6,7 @@ export default function ChatHeader({ onToggleHistory, onResetChat }) {
   return (
     <div className="px-4 py-3 bg-white border-b border-movistar-gray-border flex items-center justify-between shadow-movistar-sm">
 
-      {/* Left: History Toggle (mobile) + Lucía Identity */}
+      {/* Left: History Toggle (mobile) + Lucio Identity */}
       <div className="flex items-center gap-3">
         <button
           onClick={onToggleHistory}
@@ -18,7 +18,7 @@ export default function ChatHeader({ onToggleHistory, onResetChat }) {
         </button>
 
         <div className="flex items-center gap-3">
-          {/* Lucía Avatar */}
+          {/* Lucio Avatar */}
           <div className="relative">
             <div className="w-10 h-10 rounded-2xl text-white flex items-center justify-center"
               style={{ background: 'linear-gradient(135deg, #00A859 0%, #019df4 100%)', boxShadow: '0 0 14px rgba(1,157,244,0.35)' }}>
@@ -31,7 +31,7 @@ export default function ChatHeader({ onToggleHistory, onResetChat }) {
           <div>
             <div className="flex items-center gap-2">
               <h2 className="font-extrabold text-sm sm:text-base font-sans tracking-wide" style={{ color: '#013d5e' }}>
-                Lucía
+                Lucio
               </h2>
               <span className="px-2 py-0.5 rounded-full font-bold text-[10px] border text-white"
                 style={{ background: 'linear-gradient(90deg, #019df4, #e13c80)', borderColor: 'transparent' }}>

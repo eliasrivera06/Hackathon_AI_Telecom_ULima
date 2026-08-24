@@ -54,9 +54,9 @@ export const getInitialMessages = async () => {
 import { sendMessage as chatServiceSendMessage } from './chatService';
 
 /**
- * Send user prompt to Lucía AI (delegates to chatService -> n8n Webhook)
+ * Send user prompt to Lucio AI (delegates to chatService -> n8n Webhook)
  */
-export const sendMessageToLuciaAI = async (userPrompt, languageOverride = null) => {
+export const sendMessageToLucioAI = async (userPrompt, languageOverride = null) => {
   return await chatServiceSendMessage(userPrompt, null, languageOverride);
 };
 

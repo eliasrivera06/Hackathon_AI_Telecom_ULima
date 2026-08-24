@@ -28,7 +28,7 @@ export default function ClaimModal({ isOpen, onClose }) {
             style={{ background: 'rgba(1,157,244,0.08)', border: '1px solid rgba(1,157,244,0.20)' }}>
             <ShieldCheck className="w-5 h-5 shrink-0" style={{ color: '#019df4' }} />
             <p className="text-slate-700">
-              Lucía derivará este resumen a un especialista de atención al cliente Movistar para seguimiento personalizado.
+              Lucio derivará este resumen a un especialista de atención al cliente Movistar para seguimiento personalizado.
             </p>
           </div>
 

@@ -11,14 +11,11 @@ const getCleanWelcomeMessage = () => [
   {
     id: 'msg-welcome-' + Date.now(),
     sender: 'assistant',
-    agentName: 'Lucía',
+    agentName: 'Lucio',
     agentRole: 'Asistente de Recibos Movistar',
     timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    text: '¡Hola! Soy **Lucía**, tu asistente inteligente de Movistar. ¿En qué te puedo ayudar hoy con tu recibo o plan?',
-    suggestedActions: [
-      { id: "action-detail", label: "Ver desglose de factura", icon: "FileText", primary: true },
-      { id: "action-benefits", label: "Consultar promociones", icon: "Sparkles", primary: false }
-    ]
+    text: '¡Hola! Soy Lucio, tu asistente inteligente de Movistar. ¿En qué te puedo ayudar hoy con tu recibo o plan?',
+    suggestedActions: []
   }
 ];
 
@@ -122,7 +119,7 @@ export default function ChatMobileComponent({ webhookUrl, userPhone: propPhone, 
             <Sparkles className="w-3.5 h-3.5" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-bold text-slate-800 leading-none truncate">Lucía AI</p>
+            <p className="text-xs font-bold text-slate-800 leading-none truncate">Lucio AI</p>
             <span className="text-[9px] text-green-600 font-semibold truncate block">
               {currentPhone ? `Línea: ${currentPhone}` : 'En Línea'}
             </span>
@@ -162,7 +159,7 @@ export default function ChatMobileComponent({ webhookUrl, userPhone: propPhone, 
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
             </div>
             <div className="space-y-0.5">
-              <span className="text-xs font-bold block leading-tight text-[#013d5e]">Lucía está respondiendo...</span>
+              <span className="text-xs font-bold block leading-tight text-[#013d5e]">Lucio está respondiendo...</span>
             </div>
           </div>
         )}

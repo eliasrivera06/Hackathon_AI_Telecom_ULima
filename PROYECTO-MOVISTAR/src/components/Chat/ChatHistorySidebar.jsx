@@ -62,7 +62,7 @@ export default function ChatHistorySidebar({
             style={{ background: '#00A859', boxShadow: '0 0 14px rgba(0,168,89,0.28)' }}
           >
             <Plus className="w-4 h-4" />
-            <span>Nuevo Análisis con Lucía</span>
+            <span>Nuevo Análisis con Lucio</span>
           </button>
 
           {/* Search */}
@@ -142,7 +142,7 @@ export default function ChatHistorySidebar({
 
         {/* Footer */}
         <div className="p-3 bg-movistar-gray border-t border-slate-100 text-[11px] text-slate-500 flex items-center justify-between">
-          <span>Lucía Engine v2.4</span>
+          <span>Lucio Engine v2.4</span>
           <span className="font-bold flex items-center gap-1" style={{ color: '#00A859' }}>
             <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#00A859' }}></span>
             Online

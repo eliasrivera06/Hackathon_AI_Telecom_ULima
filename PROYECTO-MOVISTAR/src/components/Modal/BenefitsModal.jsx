@@ -21,10 +21,10 @@ export default function BenefitsModal({ isOpen, onClose }) {
   ];
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Beneficios Exclusivos Recomendados por Lucía">
+    <Modal isOpen={isOpen} onClose={onClose} title="Beneficios Exclusivos Recomendados por Lucio">
       <div className="space-y-4">
         <p className="text-xs text-slate-500 leading-relaxed">
-          Lucía ha seleccionado estas ofertas personalizadas para estabilizar tu facturación con Movistar Fibra:
+          Lucio ha seleccionado estas ofertas personalizadas para estabilizar tu facturación con Movistar Fibra:
         </p>
 
         {planBenefits.map((benefit, idx) => (

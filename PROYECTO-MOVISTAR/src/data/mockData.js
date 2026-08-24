@@ -149,24 +149,21 @@ export const initialMessages = [
   {
     id: "msg-welcome-init",
     sender: "assistant",
-    agentName: "Luc�a",
+    agentName: "Lucio",
     agentRole: "Asistente Inteligente de Recibos Movistar",
     timestamp: "Ahora",
-    text: "�Hola! Soy **Luc�a**, tu asistente inteligente de Movistar. �En qu� te puedo ayudar hoy con tu recibo o plan?",
-    suggestedActions: [
-      { id: "action-detail", label: "Ver desglose de factura", icon: "FileText", primary: true },
-      { id: "action-benefits", label: "Consultar promociones", icon: "Sparkles", primary: false }
-    ]
+    text: "¡Hola! Soy Lucio, tu asistente inteligente de Movistar. ¿En qué te puedo ayudar hoy con tu recibo o plan?",
+    suggestedActions: []
   }
 ];
 
 export const mockAiResponses = {
   "action-detail": {
-    text: "Aquí tienes el desglose detallado línea por línea de tu facturación de **Julio 2024** comparada con **Junio 2024**:",
+    text: "Aquí tienes el desglose detallado línea por línea de tu facturación de Julio 2024 comparada con Junio 2024:",
     showModal: "detail"
   },
   "action-benefits": {
-    text: "Para mantener tu tarifa reducida, encontré estas **3 opciones exclusivas** preparadas especialmente para tu cuenta:",
+    text: "Para mantener tu tarifa reducida, encontré estas 3 opciones exclusivas preparadas especialmente para tu cuenta:",
     showModal: "benefits"
   },
   "action-claim": {

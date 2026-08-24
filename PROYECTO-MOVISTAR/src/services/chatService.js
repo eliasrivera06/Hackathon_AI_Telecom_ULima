@@ -1,5 +1,5 @@
 /**
- * Chat Service Layer for Movistar Lucía AI
+ * Chat Service Layer for Movistar Lucio AI
  * Centralizes HTTP communication with Make AI Agent Webhook.
  * 100% User Account Chat Isolation & Memory Persistence.
  */
@@ -7,6 +7,31 @@
 const SESSION_STORAGE_KEY = 'movistar_chat_session_id';
 const USER_PHONE_KEY = 'movistar_user_phone';
 const SUBSCRIBER_KEY = 'movistar_subscriber_key';
+const BILLING_STORAGE_PREFIX = 'movistar_billing_info_';
+
+/**
+ * Storage helpers for customer billing data
+ */
+export const getStoredBillingInfo = (phone = null) => {
+  const target = phone || getUserPhone();
+  if (!target) return null;
+  try {
+    const saved = localStorage.getItem(`${BILLING_STORAGE_PREFIX}${target}`);
+    if (saved) return JSON.parse(saved);
+  } catch (err) {
+    console.warn('[chatService] Error cargando datos de facturación guardados:', err);
+  }
+  return null;
+};
+
+export const saveStoredBillingInfo = (phone, data) => {
+  if (!phone || !data) return;
+  try {
+    localStorage.setItem(`${BILLING_STORAGE_PREFIX}${phone}`, JSON.stringify(data));
+  } catch (err) {
+    console.warn('[chatService] Error guardando datos de facturación:', err);
+  }
+};
 
 /**
  * Genera la clave de almacenamiento única para cada número de teléfono
@@ -89,7 +114,12 @@ export const getSavedMessages = (phoneOrInitial = null, defaultInitial = []) => 
       const parsed = JSON.parse(saved);
       // Evitar cargar conversaciones residuales antiguas de pruebas globales
       if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.id !== 'msg-1') {
-        return parsed;
+        return parsed.map((m) => {
+          if (m.id && String(m.id).includes('welcome')) {
+            return { ...m, suggestedActions: [] };
+          }
+          return m;
+        });
       }
     }
   } catch (err) {
@@ -178,12 +208,12 @@ export const verifyLoginWithDatabase = async (phoneNumber, deliveryMethod = 'sms
 
     // Guardar usuario y subscriber_key verificados para esta cuenta específica
     setUserPhone(phoneNumber);
-    if (data && (data.subscriber_key || data.subscriberKey)) {
-      setSubscriberKey(data.subscriber_key || data.subscriberKey);
-    } else {
-      setSubscriberKey(phoneNumber);
-    }
+    const resolvedSubscriberKey = (data && (data.subscriber_key || data.subscriberKey)) ? (data.subscriber_key || data.subscriberKey) : phoneNumber;
+    setSubscriberKey(resolvedSubscriberKey);
     localStorage.setItem(SESSION_STORAGE_KEY, `user_${phoneNumber}`);
+
+    // Disparar en segundo plano la obtención de datos de facturación para la cuenta
+    fetchClientBillingInfo(phoneNumber, resolvedSubscriberKey).catch(console.warn);
 
     return {
       success: true,
@@ -195,6 +225,128 @@ export const verifyLoginWithDatabase = async (phoneNumber, deliveryMethod = 'sms
       success: false,
       error: 'No se pudo conectar con el servidor de base de datos. Verifica tu conexión.',
     };
+  }
+};
+
+/**
+ * Consulta la base de datos a través de Make para obtener los datos de facturación en tiempo real
+ */
+export const fetchClientBillingInfo = async (phoneNumber, subscriberKey = null) => {
+  const phone = phoneNumber || getUserPhone();
+  const subKey = subscriberKey || getSubscriberKey() || phone;
+  const webhookUrl = (import.meta.env.VITE_MAKE_WEBHOOK_URL_CEL || import.meta.env.VITE_N8N_WEBHOOK_URL_CEL || import.meta.env.VITE_MAKE_WEBHOOK_URL);
+
+  const defaultInfo = {
+    fechaCorte: '17/07/2026',
+    fechaVencimiento: '05/07/2026',
+    saldoAPagar: 'S/ 83.99',
+    venceTexto: 'Vence el 05/07/2026',
+    planName: 'Movistar Plus 4Gb',
+    gbLibres: '3.5'
+  };
+
+  const stored = getStoredBillingInfo(phone);
+
+  if (!webhookUrl || !phone) {
+    return stored || defaultInfo;
+  }
+
+  try {
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        sessionId: `billing_sync_${phone}`,
+        subscriber_key: subKey,
+        telefono: phone,
+        message: '¿Cuál es mi fecha de corte, fecha de vencimiento y saldo a pagar de mi último recibo?',
+        language: 'es',
+      }),
+    });
+
+    if (!response.ok) {
+      return stored || defaultInfo;
+    }
+
+    let text = '';
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      const resData = await response.json();
+      text = extractResponseText(resData) || '';
+    } else {
+      text = await response.text();
+    }
+
+    // Parsear Saldo a pagar
+    let saldo = '83.99';
+    const saldoMatch = text.match(/saldo\s+(?:a\s+pagar\s+)?(?:total\s+)?(?:de\s+)?(?:S\/\.?\s*)?([\d.,]+)/i) ||
+                       text.match(/([\d.,]+)\s*soles/i) ||
+                       text.match(/S\/\.?\s*([\d.,]+)/i);
+    if (saldoMatch) {
+      saldo = saldoMatch[1].replace(',', '.');
+    }
+
+    // Parsear Ciclo / Fecha de Corte
+    let fechaCorte = stored?.fechaCorte || '17/07/2026';
+    const cicloMatch = text.match(/ciclo\s+(?:más\s+reciente\s+)?(?:es\s+)?(\d{4})(\d{2})(\d{2})/i) ||
+                       text.match(/corte[:\s]+(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i);
+    if (cicloMatch && cicloMatch[1] && cicloMatch[2] && cicloMatch[3]) {
+      fechaCorte = `${cicloMatch[3]}/${cicloMatch[2]}/${cicloMatch[1]}`;
+    }
+
+    // Parsear Fecha de Vencimiento
+    let fechaVencimiento = stored?.fechaVencimiento || '05/07/2026';
+    const vencMatch = text.match(/vencimiento\s+(?:el\s+)?(\d{4})(\d{2})(\d{2})/i);
+    if (vencMatch) {
+      fechaVencimiento = `${vencMatch[3]}/${vencMatch[2]}/${vencMatch[1]}`;
+    } else {
+      const vencTextMatch = text.match(/vencimiento\s+(?:el\s+)?(\d{1,2})\s+de\s+([a-zA-Záéíóú]+)(?:\s+de\s+(\d{4}))?/i);
+      if (vencTextMatch) {
+        const meses = { enero: '01', febrero: '02', marzo: '03', abril: '04', mayo: '05', junio: '06', julio: '07', agosto: '08', setiembre: '09', septiembre: '09', octubre: '10', noviembre: '11', diciembre: '12' };
+        const day = vencTextMatch[1].padStart(2, '0');
+        const month = meses[vencTextMatch[2].toLowerCase()] || '07';
+        const year = vencTextMatch[3] || '2026';
+        fechaVencimiento = `${day}/${month}/${year}`;
+      }
+    }
+
+    // Calcular días restantes de vencimiento
+    let venceTexto = `Vence el ${fechaVencimiento}`;
+    try {
+      const [vDay, vMonth, vYear] = fechaVencimiento.split('/').map(Number);
+      const dueDate = new Date(vYear, vMonth - 1, vDay);
+      const now = new Date();
+      const diffTime = dueDate.getTime() - now.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays > 1) {
+        venceTexto = `Vence en ${diffDays} días (${fechaVencimiento})`;
+      } else if (diffDays === 1) {
+        venceTexto = `Vence mañana (${fechaVencimiento})`;
+      } else if (diffDays === 0) {
+        venceTexto = `Vence hoy (${fechaVencimiento})`;
+      } else {
+        venceTexto = `Vence el ${fechaVencimiento}`;
+      }
+    } catch {
+      venceTexto = `Vence el ${fechaVencimiento}`;
+    }
+
+    const billingResult = {
+      fechaCorte,
+      fechaVencimiento,
+      saldoAPagar: `S/ ${parseFloat(saldo).toFixed(2)}`,
+      venceTexto,
+      planName: stored?.planName || 'Movistar Plus 4Gb',
+      gbLibres: stored?.gbLibres || '3.5'
+    };
+
+    saveStoredBillingInfo(phone, billingResult);
+    return billingResult;
+  } catch (err) {
+    console.error('[chatService] Error obteniendo datos de facturación de BD:', err);
+    return stored || defaultInfo;
   }
 };
 
@@ -225,10 +377,10 @@ const extractResponseText = (data) => {
 const buildErrorFallbackResponse = (errorMessage) => {
   return {
     sender: 'assistant',
-    agentName: 'Lucía',
+    agentName: 'Lucio',
     agentRole: 'Asistente de Facturación Movistar',
     timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    text: errorMessage || 'Lo sentimos, hubo un problema de comunicación con el servicio de Lucía AI. Por favor intenta enviar tu consulta nuevamente.',
+    text: errorMessage || 'Lo sentimos, hubo un problema de comunicación con el servicio de Lucio AI. Por favor intenta enviar tu consulta nuevamente.',
     hasVisualComparison: false,
     comparisonData: null,
     showModal: null,
@@ -349,16 +501,26 @@ export const sendMessage = async (userPrompt, customWebhookUrl = null, languageO
       throw new Error('El Webhook no devolvió un cuerpo de texto válido');
     }
 
+    // Asegurar que el texto del chatbot no use negritas y que siempre diga Lucio
+    const sanitizedText = String(textResponse)
+      .replace(/Luc[ií]a/gi, (match) => {
+        if (match === match.toUpperCase()) return 'LUCIO';
+        if (match[0] === 'L') return 'Lucio';
+        return 'lucio';
+      })
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/<\/?(b|strong)>/gi, '');
+
     const comparisonData = (data && (data.comparison || data.receiptComparison)) || null;
     const hasVisualComparison = Boolean(comparisonData || (data && data.hasVisualComparison));
     const suggestedActions = (data && (data.suggestedActions || data.actions)) || [];
 
     return {
       sender: 'assistant',
-      agentName: 'Lucía',
+      agentName: 'Lucio',
       agentRole: 'Asistente de Facturación Movistar',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      text: textResponse,
+      text: sanitizedText,
       hasVisualComparison: hasVisualComparison,
       comparisonData: comparisonData,
       showModal: data?.showModal || null,

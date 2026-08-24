@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Sparkles, FileText, Gift, HelpCircle } from 'lucide-react';
 import ReceiptComparisonCard from '../Receipts/ReceiptComparisonCard';
 
@@ -7,10 +7,15 @@ export default function MessageBubble({ message, onActionClick, onOpenDetailModa
 
   const formatText = (text) => {
     if (!text) return null;
-    const parts = text.split(/(\*\*.*?\*\*|\`.*?\`)/g);
+    const cleanText = text.replace(/Luc[ií]a/gi, (match) => {
+      if (match === match.toUpperCase()) return 'LUCIO';
+      if (match[0] === 'L') return 'Lucio';
+      return 'lucio';
+    });
+    const parts = cleanText.split(/(\*\*.*?\*\*|\`.*?\`)/g);
     return parts.map((part, i) => {
       if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={i} className="font-bold break-words" style={{ color: '#013d5e' }}>{part.slice(2, -2)}</strong>;
+        return <span key={i} className="font-normal break-words">{part.slice(2, -2)}</span>;
       }
       if (part.startsWith('`') && part.endsWith('`')) {
         return (
@@ -73,12 +78,12 @@ export default function MessageBubble({ message, onActionClick, onOpenDetailModa
     );
   }
 
-  // Lucía AI message bubble (100% Real from Make)
+  // Lucio AI message bubble (100% Real from Make)
   return (
     <div id={message.id} className="flex justify-start mb-6 animate-slide-up w-full">
       <div className="flex items-start gap-2.5 sm:gap-3 w-full max-w-[98%] sm:max-w-[88%] lg:max-w-[82%] min-w-0">
 
-        {/* Lucía Avatar */}
+        {/* Lucio Avatar */}
         <div 
           className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl text-white flex items-center justify-center font-bold shrink-0 mt-0.5 ring-2 ring-white"
           style={{ background: 'linear-gradient(135deg, #00A859, #019df4)', boxShadow: '0 0 14px rgba(1,157,244,0.35)' }}
@@ -90,7 +95,7 @@ export default function MessageBubble({ message, onActionClick, onOpenDetailModa
 
           {/* Agent Tag */}
           <div className="flex items-center gap-2 flex-wrap min-w-0">
-            <span className="font-bold text-sm" style={{ color: '#013d5e' }}>{message.agentName || 'Lucía'}</span>
+            <span className="font-bold text-sm" style={{ color: '#013d5e' }}>{message.agentName || 'Lucio'}</span>
             <span 
               className="text-[10px] px-2 py-0.5 rounded-full font-bold border flex items-center gap-1 shrink-0"
               style={{ background: 'linear-gradient(90deg, rgba(0,168,89,0.12), rgba(1,157,244,0.12))', color: '#019df4', borderColor: 'rgba(1,157,244,0.25)' }}

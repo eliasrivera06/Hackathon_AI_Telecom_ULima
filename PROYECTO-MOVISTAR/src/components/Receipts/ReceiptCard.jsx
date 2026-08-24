@@ -82,7 +82,7 @@ export default function ReceiptCard() {
           </div>
           <div>
             <p className="font-bold text-slate-800">¿Quieres entender la diferencia de +S/20 en tu factura?</p>
-            <p className="text-slate-500">Lucía AI ha preparado un análisis detallado y personalizado.</p>
+            <p className="text-slate-500">Lucio AI ha preparado un análisis detallado y personalizado.</p>
           </div>
         </div>
 
@@ -93,7 +93,7 @@ export default function ReceiptCard() {
           style={{ background: 'linear-gradient(90deg, #00A859 0%, #019df4 50%, #e13c80 100%)', boxShadow: '0 0 24px rgba(1,157,244,0.30)' }}
         >
           <Sparkles className="w-5 h-5 text-yellow-200 group-hover:rotate-12 transition-transform" />
-          <span>Explicar mi recibo con Lucía AI</span>
+          <span>Explicar mi recibo con Lucio AI</span>
           <ChevronRight className="w-5 h-5 text-white/80 group-hover:translate-x-1 transition-transform" />
         </button>
 
