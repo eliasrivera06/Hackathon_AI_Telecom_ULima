@@ -46,7 +46,7 @@ export default function ChatHeader({ onToggleHistory, onResetChat }) {
       </div>
 
       {/* Right: Context + Reset */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 mr-[200px]">
         <div className="hidden sm:flex flex-col items-end text-right px-3 py-1 rounded-xl border"
           style={{ background: 'rgba(1,157,244,0.06)', borderColor: 'rgba(1,157,244,0.20)' }}>
           <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#019df4' }}>
