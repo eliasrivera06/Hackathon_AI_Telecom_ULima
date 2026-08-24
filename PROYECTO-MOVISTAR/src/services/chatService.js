@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Chat Service Layer for Movistar Lucía AI
  * Centralizes HTTP communication with Make AI Agent Webhook.
  * 100% User Account Chat Isolation & Memory Persistence.
@@ -236,6 +236,52 @@ const buildErrorFallbackResponse = (errorMessage) => {
   };
 };
 
+const detectLanguage = (text) => {
+  const normalized = text.toLowerCase();
+
+  const quechuaPatterns = [
+    /\bimaynallan\b/, /\ballillanchu\b/, /\brimaykusun\b/, /\byachay\b/,
+    /\bñuqa\b/, /\bqam\b/, /\bpay\b/, /\bkay\b/, /\bchay\b/,
+    /\bwasi\b/, /\byaku\b/, /\bruna\b/, /\bpacha\b/, /\bñan\b/,
+    /\bmunay\b/, /\brimay\b/, /\bmikuy\b/, /\btukuy\b/, /\bhatun\b/,
+    /\bhuchuy\b/, /\bsumaq\b/, /\bkusiy\b/, /\bllank['']ay\b/,
+    /\bwillakuy\b/, /\btapukuy\b/, /\byachachiy\b/, /\bmanam\b/,
+    /\barí\b/, /\bimata\b/, /\bmaypi\b/, /\bhayk['']a\b/,
+    /\bpitaq\b/, /\bimataq\b/, /\bñuqanchik\b/, /\bqamkuna\b/,
+    /\bpaykuna\b/, /\ballillanmi\b/, /\bsulpayki\b/, /\bañay\b/,
+    /\bpaqarin\b/, /\bkuska\b/, /\bawqa\b/, /\bllaqta\b/,
+    /\bmasiy?\b/, /\bkamachiy\b/, /\brunasimi\b/
+  ];
+
+  const aymaraPatterns = [
+    /\bkamisaki\b/, /\bwaliki\b/, /\bjaniw\b/, /\bjisa\b/,
+    /\bjiwasa\b/, /\bnaya\b/, /\bjupa\b/, /\bjuma\b/,
+    /\buta\b/, /\buma\b/, /\bjaqi\b/, /\buraq[ie]\b/,
+    /\bthakhi\b/, /\bmunañ[ai]\b/, /\bsarañ[ai]\b/, /\bmanq['']añ[ai]\b/,
+    /\bjach['']a\b/, /\bjisk['']a\b/, /\bsuma\b/, /\birnaqañ[ai]\b/,
+    /\byatiqañ[ai]\b/, /\baruskipañ[ai]\b/, /\buñjañ[ai]\b/,
+    /\bjaniwa\b/, /\bkunasa\b/, /\bkawkisa\b/, /\bqawqha\b/,
+    /\bkhitisa\b/, /\bnanaka\b/, /\bjumanaka\b/, /\bnayra\b/,
+    /\bqhipa\b/, /\bpachamama\b/, /\bmarkasa\b/, /\byuspagar[ai]\b/,
+    /\bqharüru\b/, /\baymara\b/, /\btatitu\b/
+  ];
+
+  let quechuaScore = 0;
+  for (const pattern of quechuaPatterns) {
+    if (pattern.test(normalized)) quechuaScore++;
+  }
+
+  let aymaraScore = 0;
+  for (const pattern of aymaraPatterns) {
+    if (pattern.test(normalized)) aymaraScore++;
+  }
+
+  if (quechuaScore >= 2 || (quechuaScore === 1 && aymaraScore === 0)) return 'qu';
+  if (aymaraScore >= 2 || (aymaraScore === 1 && quechuaScore === 0)) return 'ay';
+
+  return 'es';
+};
+
 /**
  * Send user message to Make AI Agent Webhook
  */
@@ -244,8 +290,9 @@ export const sendMessage = async (userPrompt, customWebhookUrl = null) => {
   const userPhone = getUserPhone();
   const subscriberKey = getSubscriberKey();
   const webhookUrl = customWebhookUrl || import.meta.env.VITE_MAKE_WEBHOOK_URL || import.meta.env.VITE_N8N_WEBHOOK_URL;
+  const language = detectLanguage(userPrompt);
 
-  console.log(`[chatService] Enviando mensaje a Make: "${userPrompt}" (SubscriberKey: ${subscriberKey}, SessionID: ${sessionId})`);
+  console.log(`[chatService] Enviando mensaje a Make: "${userPrompt}" (SubscriberKey: ${subscriberKey}, SessionID: ${sessionId}, Language: ${language})`);
 
   if (!webhookUrl) {
     console.warn('[chatService] Webhook URL no configurada en VITE_MAKE_WEBHOOK_URL.');
@@ -263,6 +310,7 @@ export const sendMessage = async (userPrompt, customWebhookUrl = null) => {
         subscriber_key: subscriberKey,
         telefono: userPhone,
         message: userPrompt,
+        language: language,
       }),
     });
 
