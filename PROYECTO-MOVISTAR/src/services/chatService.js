@@ -285,14 +285,29 @@ const detectLanguage = (text) => {
 /**
  * Send user message to Make AI Agent Webhook
  */
-export const sendMessage = async (userPrompt, customWebhookUrl = null) => {
+export const sendMessage = async (userPrompt, customWebhookUrl = null, languageOverride = null) => {
   const sessionId = getSessionId();
   const userPhone = getUserPhone();
   const subscriberKey = getSubscriberKey();
   const webhookUrl = customWebhookUrl || import.meta.env.VITE_MAKE_WEBHOOK_URL || import.meta.env.VITE_N8N_WEBHOOK_URL;
-  const language = detectLanguage(userPrompt);
 
-  console.log(`[chatService] Enviando mensaje a Make: "${userPrompt}" (SubscriberKey: ${subscriberKey}, SessionID: ${sessionId}, Language: ${language})`);
+  // Prioridad: idioma manual del usuario > detección automática
+  const language = languageOverride || detectLanguage(userPrompt);
+
+  // Payload ESTRICTO de 3 campos para Make.com
+  const payload = {
+    subscriber_key: subscriberKey,
+    message: userPrompt,
+    language: language,
+  };
+
+  // Auditoría: imprimir el payload EXACTO que se envía al webhook
+  console.log('[chatService] ══════════════════════════════════════');
+  console.log('[chatService] PAYLOAD EXACTO enviado a Make webhook:');
+  console.log(JSON.stringify(payload, null, 2));
+  console.log('[chatService] Webhook URL:', webhookUrl);
+  console.log('[chatService] Idioma detectado:', detectLanguage(userPrompt), '| Idioma override:', languageOverride, '| Idioma final:', language);
+  console.log('[chatService] ══════════════════════════════════════');
 
   if (!webhookUrl) {
     console.warn('[chatService] Webhook URL no configurada en VITE_MAKE_WEBHOOK_URL.');
@@ -305,13 +320,7 @@ export const sendMessage = async (userPrompt, customWebhookUrl = null) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        sessionId: sessionId,
-        subscriber_key: subscriberKey,
-        telefono: userPhone,
-        message: userPrompt,
-        language: language,
-      }),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
