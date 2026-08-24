@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { sendMessage, resetSessionId, getSavedMessages, saveMessages, getUserPhone } from '../../services/chatService';
 import ChatHistorySidebar from '../../components/Chat/ChatHistorySidebar';
 import ChatHeader from '../../components/Chat/ChatHeader';
@@ -63,7 +63,7 @@ export default function ChatBotPage({ webhookUrl }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
-  const handleSendMessage = async (text) => {
+  const handleSendMessage = async (text, languageOverride = null) => {
     const userMsg = {
       id: 'msg-user-' + Date.now(),
       sender: 'user',
@@ -77,7 +77,7 @@ export default function ChatBotPage({ webhookUrl }) {
     setIsLoading(true);
 
     try {
-      const response = await sendMessage(text, webhookUrl);
+      const response = await sendMessage(text, webhookUrl, languageOverride);
       const withAiResponse = [...updatedMessages, { ...response, id: 'msg-ai-' + Date.now() }];
       setMessages(withAiResponse);
       saveMessages(currentPhone, withAiResponse);
