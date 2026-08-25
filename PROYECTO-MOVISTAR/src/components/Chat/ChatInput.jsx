@@ -1,21 +1,47 @@
 import React, { useState } from 'react';
 import { Send, Paperclip, Globe } from 'lucide-react';
 
-const LANGUAGE_OPTIONS = [
+export const LANGUAGE_OPTIONS = [
   { code: 'auto', label: 'Auto', flag: '🔍' },
   { code: 'es', label: 'Español', flag: '🇪🇸' },
   { code: 'qu', label: 'Quechua', flag: '🏔️' },
   { code: 'ay', label: 'Aymara', flag: '🌄' },
 ];
 
-export default function ChatInput({ onSendMessage, isLoading }) {
+export const PLACEHOLDERS_BY_LANG = {
+  es: 'Escribe tu consulta sobre tu recibo a Lucio...',
+  auto: 'Escribe tu consulta sobre tu recibo a Lucio...',
+  qu: "Qillqay reciboykimanta tapukuyta Lucioman...",
+  ay: "Qillqam recibomata jiskt'awima Lucioru...",
+};
+
+export default function ChatInput({ 
+  onSendMessage, 
+  isLoading, 
+  selectedLang: propLang = 'auto', 
+  onLanguageChange 
+}) {
   const [text, setText] = useState('');
-  const [selectedLang, setSelectedLang] = useState('auto');
+  const [selectedLang, setSelectedLang] = useState(propLang);
   const [showLangMenu, setShowLangMenu] = useState(false);
+
+  React.useEffect(() => {
+    if (propLang && propLang !== selectedLang) {
+      setSelectedLang(propLang);
+    }
+  }, [propLang]);
 
   const currentLangOption =
     LANGUAGE_OPTIONS.find(l => l.code === selectedLang) ||
     LANGUAGE_OPTIONS[0];
+
+  const handleSelectLang = (langCode) => {
+    setSelectedLang(langCode);
+    setShowLangMenu(false);
+    if (onLanguageChange) {
+      onLanguageChange(langCode);
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -78,10 +104,7 @@ export default function ChatInput({ onSendMessage, isLoading }) {
                 <button
                   key={lang.code}
                   type="button"
-                  onClick={() => {
-                    setSelectedLang(lang.code);
-                    setShowLangMenu(false);
-                  }}
+                  onClick={() => handleSelectLang(lang.code)}
                   className={`w-full px-3 py-2 text-left text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer ${selectedLang === lang.code
                     ? 'bg-[#019df4]/10 text-[#013d5e]'
                     : 'hover:bg-slate-50 text-slate-600'
@@ -107,7 +130,7 @@ export default function ChatInput({ onSendMessage, isLoading }) {
           value={text}
           onChange={(e) => setText(e.target.value)}
           onFocus={() => setShowLangMenu(false)}
-          placeholder="Escribe tu consulta sobre tu recibo a Lucio..."
+          placeholder={PLACEHOLDERS_BY_LANG[selectedLang] || PLACEHOLDERS_BY_LANG.es}
           disabled={isLoading}
           className="flex-1 min-w-0 px-3 sm:px-4 py-3 sm:py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs sm:text-sm text-slate-800 placeholder-slate-400 outline-none transition-all font-sans focus:border-[#019df4] focus:bg-white focus:ring-2 focus:ring-[#019df4]/15"
         />

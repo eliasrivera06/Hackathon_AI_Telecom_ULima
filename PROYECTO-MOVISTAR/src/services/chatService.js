@@ -9,6 +9,25 @@ const USER_PHONE_KEY = 'movistar_user_phone';
 const SUBSCRIBER_KEY = 'movistar_subscriber_key';
 const BILLING_STORAGE_PREFIX = 'movistar_billing_info_';
 
+export const WELCOME_MESSAGES_BY_LANG = {
+  es: '¡Hola! Soy Lucio, tu asistente inteligente de Movistar. ¿En qué te puedo ayudar hoy con tu recibo o plan?',
+  auto: '¡Hola! Soy Lucio, tu asistente inteligente de Movistar. ¿En qué te puedo ayudar hoy con tu recibo o plan?',
+  qu: "¡Allillanchu! Ñuqaqa Lucio kani, Movistarpa yachaysapa yanapaqnin. ¿Imapitaq yanapasayki reciboykimanta utaq planiykimanta?",
+  ay: "¡Kamisaraki! Nayanxa Luciotwa, Movistar tuqita suma yatiri yanapiri. ¿Kuns yanapt'irisma jichhüru recibomata jan ukax planamata?",
+};
+
+export const getCleanWelcomeMessage = (lang = 'es') => [
+  {
+    id: 'msg-welcome-' + Date.now(),
+    sender: 'assistant',
+    agentName: 'Lucio',
+    agentRole: 'Asistente de Recibos Movistar',
+    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    text: WELCOME_MESSAGES_BY_LANG[lang] || WELCOME_MESSAGES_BY_LANG.es,
+    suggestedActions: [],
+  }
+];
+
 /**
  * Storage helpers for customer billing data
  */
@@ -282,8 +301,8 @@ export const fetchClientBillingInfo = async (phoneNumber, subscriberKey = null) 
     // Parsear Saldo a pagar
     let saldo = '83.99';
     const saldoMatch = text.match(/saldo\s+(?:a\s+pagar\s+)?(?:total\s+)?(?:de\s+)?(?:S\/\.?\s*)?([\d.,]+)/i) ||
-                       text.match(/([\d.,]+)\s*soles/i) ||
-                       text.match(/S\/\.?\s*([\d.,]+)/i);
+      text.match(/([\d.,]+)\s*soles/i) ||
+      text.match(/S\/\.?\s*([\d.,]+)/i);
     if (saldoMatch) {
       saldo = saldoMatch[1].replace(',', '.');
     }
@@ -291,7 +310,7 @@ export const fetchClientBillingInfo = async (phoneNumber, subscriberKey = null) 
     // Parsear Ciclo / Fecha de Corte
     let fechaCorte = stored?.fechaCorte || '17/07/2026';
     const cicloMatch = text.match(/ciclo\s+(?:más\s+reciente\s+)?(?:es\s+)?(\d{4})(\d{2})(\d{2})/i) ||
-                       text.match(/corte[:\s]+(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i);
+      text.match(/corte[:\s]+(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i);
     if (cicloMatch && cicloMatch[1] && cicloMatch[2] && cicloMatch[3]) {
       fechaCorte = `${cicloMatch[3]}/${cicloMatch[2]}/${cicloMatch[1]}`;
     }
@@ -355,11 +374,11 @@ export const fetchClientBillingInfo = async (phoneNumber, subscriberKey = null) 
  */
 const extractResponseText = (data) => {
   if (!data) return null;
-  
+
   if (Array.isArray(data) && data.length > 0) {
     return extractResponseText(data[0]);
   }
-  
+
   if (typeof data === 'object') {
     return data.response || data.output || data.message || data.text || data.result || data.reply || (typeof data === 'object' ? JSON.stringify(data) : data);
   }
@@ -497,12 +516,23 @@ export const sendMessage = async (userPrompt, customWebhookUrl = null, languageO
 
     console.log('[chatService] Respuesta REAL recibida de Make:', textResponse, data);
 
-    if (!textResponse) {
-      throw new Error('El Webhook no devolvió un cuerpo de texto válido');
+    // Make a veces devuelve "Accepted" como ACK mientras procesa en segundo plano.
+    // En ese caso no mostramos nada al usuario: lanzamos un error controlado.
+    const trimmed = (textResponse || '').trim();
+    if (!trimmed || /^accepted$/i.test(trimmed) || /^ok$/i.test(trimmed)) {
+      throw new Error('El agente de Lucio está procesando tu solicitud. Por favor intenta de nuevo en unos segundos.');
     }
 
-    // Asegurar que el texto del chatbot no use negritas y que siempre diga Lucio
+    // Asegurar que el texto del chatbot no use negritas, decodifique entidades HTML como &#39; en apóstrofes y que siempre diga Lucio
     const sanitizedText = String(textResponse)
+      .replace(/&#39;/g, "'")
+      .replace(/&apos;/g, "'")
+      .replace(/&#x27;/gi, "'")
+      .replace(/&quot;/g, '"')
+      .replace(/&#34;/g, '"')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
       .replace(/Luc[ií]a/gi, (match) => {
         if (match === match.toUpperCase()) return 'LUCIO';
         if (match[0] === 'L') return 'Lucio';

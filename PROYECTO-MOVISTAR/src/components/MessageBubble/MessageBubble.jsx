@@ -5,12 +5,54 @@ import ReceiptComparisonCard from '../Receipts/ReceiptComparisonCard';
 export default function MessageBubble({ message, onActionClick, onOpenDetailModal }) {
   const isUser = message.sender === 'user';
 
+  const decodeHtmlEntities = (str) => {
+    if (!str) return '';
+    return str
+      .replace(/&#39;/g, "'")
+      .replace(/&apos;/g, "'")
+      .replace(/&#x27;/gi, "'")
+      .replace(/&quot;/g, '"')
+      .replace(/&#34;/g, '"')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>');
+  };
+
+  // Detecta el idioma del mensaje para traducir labels
+  const detectMsgLang = (text) => {
+    if (!text) return 'es';
+    const t = text.toLowerCase();
+    // Patrones básicos Quechua
+    if (/\b(ñuqa|qam|kay|chay|wasi|yaku|runa|pacha|munay|rimay|tukuy|sumaq|allillanchu|imapitaq|reciboyki|killapaq)\b/.test(t)) return 'qu';
+    // Patrones básicos Aymara
+    if (/\b(nayanxa|jichhüru|kamisaraki|yanapt|recibomata|planamata|ukax|tuqita)\b/.test(t)) return 'ay';
+    return 'es';
+  };
+
+  const LISTEN_LABELS = {
+    es: 'Escuchar mensaje',
+    qu: 'Uyariy willakuyta',
+    ay: 'Uyañjam parlañaru',
+  };
+
+  const TTS_LANGS = {
+    es: 'es-PE',
+    qu: 'es-PE', // Quechua no tiene voz nativa, usar español peruano como fallback
+    ay: 'es-PE',
+  };
+
+  const msgLang = isUser ? 'es' : detectMsgLang(message.text || '');
+
   const handleSpeak = (text) => {
     if (!text) return;
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'es-ES';
+      const cleanText = decodeHtmlEntities(text)
+        .replace(/Luc[ií]a/gi, 'Lucio')
+        .replace(/\*\*(.*?)\*\*/g, '$1')
+        .replace(/`([^`]+)`/g, '$1');
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      utterance.lang = TTS_LANGS[msgLang] || 'es-PE';
       window.speechSynthesis.speak(utterance);
     } else {
       console.warn('Web Speech API is not supported in this browser.');
@@ -19,7 +61,8 @@ export default function MessageBubble({ message, onActionClick, onOpenDetailModa
 
   const formatText = (text) => {
     if (!text) return null;
-    const cleanText = text.replace(/Luc[ií]a/gi, (match) => {
+    const decoded = decodeHtmlEntities(text);
+    const cleanText = decoded.replace(/Luc[ií]a/gi, (match) => {
       if (match === match.toUpperCase()) return 'LUCIO';
       if (match[0] === 'L') return 'Lucio';
       return 'lucio';
@@ -128,10 +171,10 @@ export default function MessageBubble({ message, onActionClick, onOpenDetailModa
               <button 
                 onClick={() => handleSpeak(message.text)}
                 className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-[#019df4] transition-colors py-1 px-2 rounded-lg hover:bg-blue-50/50"
-                title="Escuchar mensaje"
+                title={LISTEN_LABELS[msgLang] || LISTEN_LABELS.es}
               >
                 <Volume2 className="w-4 h-4" />
-                Escuchar mensaje
+                {LISTEN_LABELS[msgLang] || LISTEN_LABELS.es}
               </button>
             </div>
 

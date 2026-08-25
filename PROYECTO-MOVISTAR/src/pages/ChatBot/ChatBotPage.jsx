@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { sendMessage, resetSessionId, getSavedMessages, saveMessages, getUserPhone } from '../../services/chatService';
+import { sendMessage, resetSessionId, getSavedMessages, saveMessages, getUserPhone, getCleanWelcomeMessage } from '../../services/chatService';
 import ChatHistorySidebar from '../../components/Chat/ChatHistorySidebar';
 import ChatHeader from '../../components/Chat/ChatHeader';
 import MessageBubble from '../../components/MessageBubble/MessageBubble';
@@ -9,21 +9,10 @@ import BenefitsModal from '../../components/Modal/BenefitsModal';
 import ClaimModal from '../../components/Modal/ClaimModal';
 import { Sparkles, Loader2 } from 'lucide-react';
 
-const getCleanWelcomeMessage = () => [
-  {
-    id: 'msg-welcome-' + Date.now(),
-    sender: 'assistant',
-    agentName: 'Lucio',
-    agentRole: 'Asistente Inteligente de Recibos Movistar',
-    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    text: '¡Hola! Soy Lucio, tu asistente inteligente de facturación Movistar. ¿Qué consulta o duda tienes sobre tu recibo hoy?',
-    suggestedActions: [],
-  }
-];
-
 export default function ChatBotPage({ webhookUrl }) {
   const userPhone = getUserPhone();
-  const [messages, setMessages] = useState(() => getSavedMessages(userPhone, getCleanWelcomeMessage()));
+  const [selectedLang, setSelectedLang] = useState('auto');
+  const [messages, setMessages] = useState(() => getSavedMessages(userPhone, getCleanWelcomeMessage('es')));
   const [isLoading, setIsLoading] = useState(false);
   const [currentChatId, setCurrentChatId] = useState('chat-1');
   const [isMobileHistoryOpen, setIsMobileHistoryOpen] = useState(false);
@@ -33,7 +22,7 @@ export default function ChatBotPage({ webhookUrl }) {
 
   useEffect(() => {
     const currentPhone = getUserPhone();
-    const isolatedMessages = getSavedMessages(currentPhone, getCleanWelcomeMessage());
+    const isolatedMessages = getSavedMessages(currentPhone, getCleanWelcomeMessage(selectedLang === 'auto' ? 'es' : selectedLang));
     setMessages(isolatedMessages);
   }, [userPhone]);
 
@@ -92,11 +81,20 @@ export default function ChatBotPage({ webhookUrl }) {
     else if (actionId === 'action-claim') setActiveModal('claim');
   };
 
+  const handleLanguageChange = (langCode) => {
+    setSelectedLang(langCode);
+    // Si solo hay el mensaje de bienvenida, actualizar al idioma nuevo
+    if (messages.length === 1 && messages[0].id.includes('welcome')) {
+      const freshWelcome = getCleanWelcomeMessage(langCode === 'auto' ? 'es' : langCode);
+      setMessages(freshWelcome);
+    }
+  };
+
   const handleNewChat = () => {
     const currentPhone = getUserPhone();
     const newSession = resetSessionId(currentPhone);
     setCurrentChatId('chat-' + Date.now());
-    const freshWelcome = getCleanWelcomeMessage();
+    const freshWelcome = getCleanWelcomeMessage(selectedLang === 'auto' ? 'es' : selectedLang);
     setMessages(freshWelcome);
     saveMessages(currentPhone, freshWelcome);
     console.log('[ChatBotPage] Nueva sesión iniciada para:', currentPhone, newSession);
@@ -169,7 +167,12 @@ export default function ChatBotPage({ webhookUrl }) {
           <div ref={messagesEndRef} />
         </div>
 
-        <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+        <ChatInput
+          onSendMessage={handleSendMessage}
+          isLoading={isLoading}
+          selectedLang={selectedLang}
+          onLanguageChange={handleLanguageChange}
+        />
       </div>
 
       {/* Modals */}

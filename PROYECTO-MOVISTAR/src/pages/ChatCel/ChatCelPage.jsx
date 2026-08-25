@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ChatMobileComponent from './ChatMobileComponent';
 import ChatSwitcher from '../ChatSwitcher/ChatSwitcher';
-import { 
-  verifyLoginWithDatabase, 
-  getUserPhone, 
-  setUserPhone, 
+import {
+  verifyLoginWithDatabase,
+  getUserPhone,
+  setUserPhone,
   setSubscriberKey,
   getSubscriberKey,
   fetchClientBillingInfo,
@@ -16,10 +16,10 @@ import { Phone, User, MessageCircle, MoreHorizontal, AlertCircle, Loader2, Searc
 export default function ChatCelPage() {
   const navigate = useNavigate();
   const webhookUrl = (import.meta.env.VITE_MAKE_WEBHOOK_URL_CEL || import.meta.env.VITE_N8N_WEBHOOK_URL_CEL || import.meta.env.VITE_MAKE_WEBHOOK_URL);
-  
+
   // Flujo de la App Móvil: 'login' -> 'home' -> 'chat'
   const [activeTab, setActiveTab] = useState(() => getUserPhone() ? 'home' : 'login');
-  
+
   // Form State para Login
   const [phoneNumber, setPhoneNumber] = useState(getUserPhone() || '');
   const [deliveryMethod, setDeliveryMethod] = useState('sms'); // 'sms' | 'whatsapp'
@@ -103,10 +103,10 @@ export default function ChatCelPage() {
   return (
     <div className="w-full min-h-screen flex justify-center items-center bg-slate-200 p-4 relative font-sans">
       <ChatSwitcher />
-      
+
       {/* Mobile Frame Container */}
       <div className="w-full max-w-[400px] h-[820px] max-h-[92vh] bg-white rounded-[44px] shadow-2xl overflow-hidden flex flex-col relative border-[10px] border-slate-900">
-        
+
         {/* Mobile Notch */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-36 h-5 bg-slate-900 rounded-b-xl z-50 flex justify-center items-center">
           <div className="w-12 h-1 bg-slate-800 rounded-full"></div>
@@ -115,7 +115,7 @@ export default function ChatCelPage() {
         {activeTab === 'login' ? (
           /* PANTALLA LOGIN MÓVIL */
           <div className="flex-1 flex flex-col justify-between p-6 bg-white z-10 pt-10 overflow-y-auto">
-            
+
             <div className="space-y-5">
               {/* 1. Flecha Volver a Inicio */}
               <div className="flex items-center justify-start pt-1">
@@ -125,69 +125,69 @@ export default function ChatCelPage() {
                   className="p-1 -ml-2 text-slate-800 hover:text-[#019df4] transition-colors focus:outline-none cursor-pointer"
                   aria-label="Volver a Inicio"
                 >
-                  <svg 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="#222222" 
-                    strokeWidth="2.2" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#222222"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                     className="w-7 h-7"
                   >
-                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
                   </svg>
                 </button>
               </div>
 
               {/* 2. Ilustración Line-Art */}
               <div className="flex justify-center pt-1 pb-1">
-                <svg 
-                  viewBox="0 0 160 70" 
-                  fill="none" 
-                  xmlns="http://www.w3.org/2000/svg" 
+                <svg
+                  viewBox="0 0 160 70"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
                   className="w-[140px] h-[60px]"
                 >
-                  <path 
-                    d="M15 46 C 25 22, 48 20, 64 32" 
-                    stroke="#50A7E2" 
-                    strokeWidth="2" 
-                    strokeDasharray="3.5 3.5" 
-                    strokeLinecap="round" 
+                  <path
+                    d="M15 46 C 25 22, 48 20, 64 32"
+                    stroke="#50A7E2"
+                    strokeWidth="2"
+                    strokeDasharray="3.5 3.5"
+                    strokeLinecap="round"
                   />
                   <g transform="translate(68, 16) rotate(-8)">
-                    <path 
-                      d="M0 16 L32 0 L18 30 L13 18 Z" 
-                      fill="none" 
-                      stroke="#50A7E2" 
-                      strokeWidth="2" 
-                      strokeLinejoin="round" 
-                      strokeLinecap="round" 
+                    <path
+                      d="M0 16 L32 0 L18 30 L13 18 Z"
+                      fill="none"
+                      stroke="#50A7E2"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                      strokeLinecap="round"
                     />
-                    <path 
-                      d="M13 18 L32 0" 
-                      stroke="#50A7E2" 
-                      strokeWidth="2" 
-                      strokeLinecap="round" 
+                    <path
+                      d="M13 18 L32 0"
+                      stroke="#50A7E2"
+                      strokeWidth="2"
+                      strokeLinecap="round"
                     />
                   </g>
-                  <rect 
-                    x="115" 
-                    y="10" 
-                    width="30" 
-                    height="50" 
-                    rx="6" 
-                    fill="none" 
-                    stroke="#50A7E2" 
-                    strokeWidth="2.2" 
+                  <rect
+                    x="115"
+                    y="10"
+                    width="30"
+                    height="50"
+                    rx="6"
+                    fill="none"
+                    stroke="#50A7E2"
+                    strokeWidth="2.2"
                   />
-                  <line 
-                    x1="126" 
-                    y1="15" 
-                    x2="134" 
-                    y2="15" 
-                    stroke="#50A7E2" 
-                    strokeWidth="1.8" 
-                    strokeLinecap="round" 
+                  <line
+                    x1="126"
+                    y1="15"
+                    x2="134"
+                    y2="15"
+                    stroke="#50A7E2"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
                   />
                   <circle cx="130" cy="53" r="1.8" fill="#50A7E2" />
                 </svg>
@@ -198,7 +198,7 @@ export default function ChatCelPage() {
                 <h1 className="text-[22px] font-semibold text-[#222222] tracking-tight leading-snug">
                   Ingresa tu número Movistar
                 </h1>
-                
+
                 <div className="text-[14px] leading-relaxed text-[#4A4A4A]">
                   <p className="font-normal">Te enviaremos un código de seguridad</p>
                   <p className="font-semibold text-[#222222]">para verificar tu identidad</p>
@@ -217,18 +217,17 @@ export default function ChatCelPage() {
                     onChange={handlePhoneChange}
                     placeholder="Ej. 998877665"
                     disabled={isSubmittingLogin}
-                    className={`w-full h-[52px] pl-4 pr-11 rounded-[8px] bg-white border-[1.5px] text-[#222222] placeholder-[#888888] text-[15px] outline-none transition-colors ${
-                      loginError ? 'border-red-500 focus:border-red-600' : 'border-[#767676] focus:border-[#50A7E2]'
-                    }`}
+                    className={`w-full h-[52px] pl-4 pr-11 rounded-[8px] bg-white border-[1.5px] text-[#222222] placeholder-[#888888] text-[15px] outline-none transition-colors ${loginError ? 'border-red-500 focus:border-red-600' : 'border-[#767676] focus:border-[#50A7E2]'
+                      }`}
                   />
                   <div className="absolute right-3.5 pointer-events-none text-[#757575]">
-                    <svg 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      strokeWidth="1.8" 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                       className="w-5 h-5"
                     >
                       <rect x="6" y="2" width="12" height="20" rx="3" />
@@ -261,7 +260,7 @@ export default function ChatCelPage() {
                 </p>
 
                 <div className="w-full bg-white border-[1.5px] border-[#E0E0E0] rounded-[12px] p-4 space-y-3.5">
-                  <label 
+                  <label
                     onClick={() => setDeliveryMethod('sms')}
                     className="flex items-center gap-3.5 cursor-pointer group select-none"
                   >
@@ -274,9 +273,8 @@ export default function ChatCelPage() {
                         onChange={() => setDeliveryMethod('sms')}
                         className="sr-only"
                       />
-                      <div className={`w-[22px] h-[22px] rounded-full border-[2px] transition-colors flex items-center justify-center ${
-                        deliveryMethod === 'sms' ? 'border-[#50A7E2]' : 'border-[#9CA3AF]'
-                      }`}>
+                      <div className={`w-[22px] h-[22px] rounded-full border-[2px] transition-colors flex items-center justify-center ${deliveryMethod === 'sms' ? 'border-[#50A7E2]' : 'border-[#9CA3AF]'
+                        }`}>
                         {deliveryMethod === 'sms' && (
                           <div className="w-[10px] h-[10px] rounded-full bg-[#50A7E2]" />
                         )}
@@ -287,7 +285,7 @@ export default function ChatCelPage() {
                     </span>
                   </label>
 
-                  <label 
+                  <label
                     onClick={() => setDeliveryMethod('whatsapp')}
                     className="flex items-center gap-3.5 cursor-pointer group select-none"
                   >
@@ -300,9 +298,8 @@ export default function ChatCelPage() {
                         onChange={() => setDeliveryMethod('whatsapp')}
                         className="sr-only"
                       />
-                      <div className={`w-[22px] h-[22px] rounded-full border-[2px] transition-colors flex items-center justify-center ${
-                        deliveryMethod === 'whatsapp' ? 'border-[#50A7E2]' : 'border-[#9CA3AF]'
-                      }`}>
+                      <div className={`w-[22px] h-[22px] rounded-full border-[2px] transition-colors flex items-center justify-center ${deliveryMethod === 'whatsapp' ? 'border-[#50A7E2]' : 'border-[#9CA3AF]'
+                        }`}>
                         {deliveryMethod === 'whatsapp' && (
                           <div className="w-[10px] h-[10px] rounded-full bg-[#50A7E2]" />
                         )}
@@ -323,11 +320,10 @@ export default function ChatCelPage() {
                 form="mobile-login-form"
                 type="submit"
                 disabled={phoneNumber.length !== 9 || isSubmittingLogin}
-                className={`w-full h-[52px] rounded-full text-white font-semibold text-[16px] transition-all flex items-center justify-center gap-2 ${
-                  phoneNumber.length === 9 && !isSubmittingLogin
+                className={`w-full h-[52px] rounded-full text-white font-semibold text-[16px] transition-all flex items-center justify-center gap-2 ${phoneNumber.length === 9 && !isSubmittingLogin
                     ? 'bg-[#50A7E2] hover:bg-[#3894D4] cursor-pointer shadow-md'
                     : 'bg-[#B0D6F1] cursor-not-allowed opacity-75'
-                }`}
+                  }`}
               >
                 {isSubmittingLogin ? (
                   <>
@@ -355,14 +351,14 @@ export default function ChatCelPage() {
                   <p className="font-extrabold text-sm">{phoneNumber || '998 877 665'}</p>
                 </div>
               </div>
-              
+
             </div>
 
             {/* Body Container */}
             <div className="flex-1 w-full bg-slate-50 relative -mt-5 pt-7 pb-20 overflow-y-auto">
               {activeTab === 'home' && (
                 <div className="p-5 space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  
+
                   {/* Plan Info Card */}
                   <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 text-center">
                     <p className="text-xs font-semibold text-gray-500 mb-1">
@@ -388,8 +384,8 @@ export default function ChatCelPage() {
                           {isLoadingBilling ? 'S/ ...' : (billingInfo.saldoAPagar || 'S/ 83.99')}
                         </p>
                       </div>
-                      <button 
-                        onClick={() => {}}
+                      <button
+                        onClick={() => { }}
                         className="px-4 py-1.5 bg-[#019df4] text-white font-bold rounded-full text-xs shadow-sm cursor-default"
                       >
                         Pagar Recibo
@@ -403,33 +399,33 @@ export default function ChatCelPage() {
                   {/* Consumo Megas & Minutos Card */}
                   <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
                     <div className="relative w-20 h-20 rounded-full border-[6px] border-[#019df4] flex flex-col items-center justify-center">
-                       <span className="text-base font-extrabold text-slate-800">3.5</span>
-                       <span className="text-[9px] text-gray-500 font-bold">GB Libres</span>
+                      <span className="text-base font-extrabold text-slate-800">3.5</span>
+                      <span className="text-[9px] text-gray-500 font-bold">GB Libres</span>
                     </div>
                     <div className="space-y-3">
                       <div className="flex items-center gap-2.5">
-                         <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500">
-                           <MessageCircle className="w-4 h-4"/>
-                         </div>
-                         <div>
-                           <p className="text-sm font-bold text-slate-800">Ilimitados</p>
-                           <p className="text-[10px] text-gray-500 font-bold -mt-0.5">SMS</p>
-                         </div>
+                        <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500">
+                          <MessageCircle className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-800">Ilimitados</p>
+                          <p className="text-[10px] text-gray-500 font-bold -mt-0.5">SMS</p>
+                        </div>
                       </div>
                       <div className="flex items-center gap-2.5">
-                         <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-[#019df4]">
-                           <Phone className="w-4 h-4"/>
-                         </div>
-                         <div>
-                           <p className="text-sm font-bold text-slate-800">Ilimitados</p>
-                           <p className="text-[10px] text-gray-500 font-bold -mt-0.5">Minutos</p>
-                         </div>
+                        <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-[#019df4]">
+                          <Phone className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-800">Ilimitados</p>
+                          <p className="text-[10px] text-gray-500 font-bold -mt-0.5">Minutos</p>
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Botón directo al asistente AI */}
-                  <button 
+                  <button
                     onClick={() => setActiveTab('chat')}
                     className="w-full p-4 rounded-2xl bg-gradient-to-r from-[#019df4] to-[#005C9E] text-white flex items-center justify-between shadow-md hover:opacity-95 transition-opacity cursor-pointer"
                   >
@@ -452,19 +448,19 @@ export default function ChatCelPage() {
 
               {activeTab === 'chat' && (
                 <div className="absolute inset-0 pt-0 pb-[72px] flex flex-col">
-                  <ChatMobileComponent 
-                    userPhone={phoneNumber} 
+                  <ChatMobileComponent
+                    userPhone={phoneNumber}
                     webhookUrl={webhookUrl}
                     onBack={() => setActiveTab('home')}
-                                      />
+                  />
                 </div>
               )}
             </div>
 
             {/* Bottom Navigation Bar */}
             <div className="absolute bottom-0 w-full bg-white border-t border-slate-100 flex items-center justify-around py-2 px-2 rounded-b-[34px] pb-5 shrink-0 z-10 shadow-[0_-4px_15px_rgba(0,0,0,0.05)]">
-              <button 
-                onClick={() => setActiveTab('home')} 
+              <button
+                onClick={() => setActiveTab('home')}
                 className={`flex flex-col items-center gap-0.5 ${activeTab === 'home' ? 'text-[#019df4]' : 'text-gray-400'} cursor-pointer`}
               >
                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${activeTab === 'home' ? 'bg-blue-50' : 'bg-transparent'}`}>
@@ -472,9 +468,9 @@ export default function ChatCelPage() {
                 </div>
                 <span className="text-[10px] font-semibold">Mi Perfil</span>
               </button>
-              
-              <button 
-                onClick={() => {}} 
+
+              <button
+                onClick={() => { }}
                 className="flex flex-col items-center gap-0.5 text-gray-400 hover:text-gray-500 cursor-default"
               >
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-transparent">
@@ -482,9 +478,9 @@ export default function ChatCelPage() {
                 </div>
                 <span className="text-[10px] font-semibold">Recibos</span>
               </button>
-              
-              <button 
-                onClick={() => setActiveTab('chat')} 
+
+              <button
+                onClick={() => setActiveTab('chat')}
                 className={`flex flex-col items-center gap-0.5 ${activeTab === 'chat' ? 'text-[#019df4]' : 'text-gray-400'} cursor-pointer`}
               >
                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center relative ${activeTab === 'chat' ? 'bg-blue-50' : 'bg-transparent'}`}>
@@ -495,9 +491,9 @@ export default function ChatCelPage() {
                 </div>
                 <span className="text-[10px] font-semibold">Lucio AI</span>
               </button>
-              
-              <button 
-                onClick={handleLogout} 
+
+              <button
+                onClick={handleLogout}
                 className="flex flex-col items-center gap-0.5 text-gray-400 hover:text-red-500 cursor-pointer"
                 title="Cerrar sesión"
               >
