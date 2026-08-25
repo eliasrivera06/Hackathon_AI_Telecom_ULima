@@ -463,13 +463,22 @@ export const sendMessage = async (userPrompt, customWebhookUrl = null, languageO
   const webhookUrl = customWebhookUrl || import.meta.env.VITE_MAKE_WEBHOOK_URL || import.meta.env.VITE_N8N_WEBHOOK_URL;
 
   // Prioridad: idioma manual del usuario > detección automática
-  const language = languageOverride || detectLanguage(userPrompt);
+  const detectedOrOverride = languageOverride || detectLanguage(userPrompt);
+  let makeLanguage = 'ES';
+  const normLang = String(detectedOrOverride || '').trim().toLowerCase();
+  if (normLang === 'qu' || normLang === 'quechua') {
+    makeLanguage = 'QU';
+  } else if (normLang === 'ay' || normLang === 'aymara') {
+    makeLanguage = 'AY';
+  } else {
+    makeLanguage = 'ES';
+  }
 
-  // Payload ESTRICTO de 3 campos para Make.com
+  // Payload ESTRICTO de 3 campos para Make.com (con language en mayúsculas requerido por los routers de Make)
   const payload = {
     subscriber_key: subscriberKey,
     message: userPrompt,
-    language: language,
+    language: makeLanguage,
   };
 
   // Auditoría: imprimir el payload EXACTO que se envía al webhook
@@ -477,7 +486,7 @@ export const sendMessage = async (userPrompt, customWebhookUrl = null, languageO
   console.log('[chatService] PAYLOAD EXACTO enviado a Make webhook:');
   console.log(JSON.stringify(payload, null, 2));
   console.log('[chatService] Webhook URL:', webhookUrl);
-  console.log('[chatService] Idioma detectado:', detectLanguage(userPrompt), '| Idioma override:', languageOverride, '| Idioma final:', language);
+  console.log('[chatService] Idioma detectado:', detectLanguage(userPrompt), '| Idioma override:', languageOverride, '| Idioma final Make:', makeLanguage);
   console.log('[chatService] ══════════════════════════════════════');
 
   if (!webhookUrl) {
