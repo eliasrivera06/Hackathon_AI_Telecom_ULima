@@ -231,9 +231,6 @@ export const verifyLoginWithDatabase = async (phoneNumber, deliveryMethod = 'sms
     setSubscriberKey(resolvedSubscriberKey);
     localStorage.setItem(SESSION_STORAGE_KEY, `user_${phoneNumber}`);
 
-    // Disparar en segundo plano la obtención de datos de facturación para la cuenta
-    fetchClientBillingInfo(phoneNumber, resolvedSubscriberKey).catch(console.warn);
-
     return {
       success: true,
       data: data,

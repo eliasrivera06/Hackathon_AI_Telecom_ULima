@@ -83,9 +83,6 @@ export default function ChatCelPage() {
 
     if (result.success) {
       setActiveTab('home');
-      fetchClientBillingInfo(phoneNumber, result.data?.subscriber_key || result.data?.subscriberKey).then((data) => {
-        if (data) setBillingInfo(data);
-      });
     } else {
       setLoginError(result.error || 'El número no se encuentra registrado en nuestra base de datos.');
     }
