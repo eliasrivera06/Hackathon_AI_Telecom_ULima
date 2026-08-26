@@ -252,19 +252,10 @@ export const fetchClientBillingInfo = async (phoneNumber, subscriberKey = null) 
   const subKey = subscriberKey || getSubscriberKey() || phone;
   const webhookUrl = (import.meta.env.VITE_MAKE_WEBHOOK_URL_CEL || import.meta.env.VITE_N8N_WEBHOOK_URL_CEL || import.meta.env.VITE_MAKE_WEBHOOK_URL);
 
-  const defaultInfo = {
-    fechaCorte: '17/07/2026',
-    fechaVencimiento: '05/07/2026',
-    saldoAPagar: 'S/ 83.99',
-    venceTexto: 'Vence el 05/07/2026',
-    planName: 'Movistar Plus 4Gb',
-    gbLibres: '3.5'
-  };
-
   const stored = getStoredBillingInfo(phone);
 
   if (!webhookUrl || !phone) {
-    return stored || defaultInfo;
+    return stored || null;
   }
 
   try {
@@ -283,7 +274,7 @@ export const fetchClientBillingInfo = async (phoneNumber, subscriberKey = null) 
     });
 
     if (!response.ok) {
-      return stored || defaultInfo;
+      return stored || null;
     }
 
     let text = '';
@@ -295,74 +286,124 @@ export const fetchClientBillingInfo = async (phoneNumber, subscriberKey = null) 
       text = await response.text();
     }
 
-    // Parsear Saldo a pagar
-    let saldo = '83.99';
+    // Meses para parseo en texto natural
+    const meses = {
+      enero: '01', febrero: '02', marzo: '03', abril: '04', mayo: '05', junio: '06',
+      julio: '07', agosto: '08', setiembre: '09', septiembre: '09', octubre: '10',
+      noviembre: '11', diciembre: '12'
+    };
+
+    // 1. Detectar si el recibo ya está pagado o no registra deuda
+    const isExplicitlyPaid = /recibo (se encuentra )?pagado|recibo cancelado|no (cuenta con|registra|tiene) deuda|deuda\s*:\s*0|saldo\s*(actual|a pagar)?\s*:\s*(S\/\.?\s*)?0(\.00)?|sin deuda|al d[ií]a sin deuda/i.test(text);
+
+    // 2. Parsear Saldo a pagar
+    let saldo = '0.00';
     const saldoMatch = text.match(/saldo\s+(?:a\s+pagar\s+)?(?:total\s+)?(?:de\s+)?(?:S\/\.?\s*)?([\d.,]+)/i) ||
       text.match(/([\d.,]+)\s*soles/i) ||
       text.match(/S\/\.?\s*([\d.,]+)/i);
+
     if (saldoMatch) {
       saldo = saldoMatch[1].replace(',', '.');
     }
 
-    // Parsear Ciclo / Fecha de Corte
-    let fechaCorte = stored?.fechaCorte || '17/07/2026';
-    const cicloMatch = text.match(/ciclo\s+(?:más\s+reciente\s+)?(?:es\s+)?(\d{4})(\d{2})(\d{2})/i) ||
-      text.match(/corte[:\s]+(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i);
-    if (cicloMatch && cicloMatch[1] && cicloMatch[2] && cicloMatch[3]) {
-      fechaCorte = `${cicloMatch[3]}/${cicloMatch[2]}/${cicloMatch[1]}`;
+    const numSaldo = parseFloat(saldo) || 0;
+    const isPaid = isExplicitlyPaid || numSaldo === 0;
+
+    // 3. Parsear Fecha de Corte / Ciclo / Emisión
+    let fechaCorte = stored?.fechaCorte || '';
+    
+    // Formato numérico: 17/07/2026 o 20260717
+    const corteNumMatch = text.match(/(?:corte|emisi[oó]n|ciclo)[\w\s:]*?(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i) ||
+      text.match(/ciclo\s+(?:más\s+reciente\s+)?(?:es\s+)?(\d{4})(\d{2})(\d{2})/i);
+    
+    if (corteNumMatch) {
+      if (corteNumMatch[2] && corteNumMatch[3]) {
+        fechaCorte = `${corteNumMatch[3]}/${corteNumMatch[2]}/${corteNumMatch[1]}`;
+      } else {
+        fechaCorte = corteNumMatch[1];
+      }
+    } else {
+      // Formato texto: "17 de julio de 2026"
+      const corteTextMatch = text.match(/(?:corte|emisi[oó]n|ciclo)[\w\s:]*?(\d{1,2})\s+de\s+([a-zA-Záéíóú]+)(?:\s+de\s+(\d{4}))?/i);
+      if (corteTextMatch) {
+        const day = corteTextMatch[1].padStart(2, '0');
+        const month = meses[corteTextMatch[2].toLowerCase()] || '07';
+        const year = corteTextMatch[3] || new Date().getFullYear();
+        fechaCorte = `${day}/${month}/${year}`;
+      }
     }
 
-    // Parsear Fecha de Vencimiento
-    let fechaVencimiento = stored?.fechaVencimiento || '05/07/2026';
-    const vencMatch = text.match(/vencimiento\s+(?:el\s+)?(\d{4})(\d{2})(\d{2})/i);
-    if (vencMatch) {
-      fechaVencimiento = `${vencMatch[3]}/${vencMatch[2]}/${vencMatch[1]}`;
+    // 4. Parsear Fecha de Vencimiento
+    let fechaVencimiento = stored?.fechaVencimiento || '';
+    
+    // Formato numérico
+    const vencNumMatch = text.match(/(?:vencimiento|vence)[\w\s:]*?(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i) ||
+      text.match(/vencimiento\s+(?:el\s+)?(\d{4})(\d{2})(\d{2})/i);
+
+    if (vencNumMatch) {
+      if (vencNumMatch[2] && vencNumMatch[3]) {
+        fechaVencimiento = `${vencNumMatch[3]}/${vencNumMatch[2]}/${vencNumMatch[1]}`;
+      } else {
+        fechaVencimiento = vencNumMatch[1];
+      }
     } else {
-      const vencTextMatch = text.match(/vencimiento\s+(?:el\s+)?(\d{1,2})\s+de\s+([a-zA-Záéíóú]+)(?:\s+de\s+(\d{4}))?/i);
+      const vencTextMatch = text.match(/(?:vencimiento|vence)[\w\s:]*?(\d{1,2})\s+de\s+([a-zA-Záéíóú]+)(?:\s+de\s+(\d{4}))?/i);
       if (vencTextMatch) {
-        const meses = { enero: '01', febrero: '02', marzo: '03', abril: '04', mayo: '05', junio: '06', julio: '07', agosto: '08', setiembre: '09', septiembre: '09', octubre: '10', noviembre: '11', diciembre: '12' };
         const day = vencTextMatch[1].padStart(2, '0');
         const month = meses[vencTextMatch[2].toLowerCase()] || '07';
-        const year = vencTextMatch[3] || '2026';
+        const year = vencTextMatch[3] || new Date().getFullYear();
         fechaVencimiento = `${day}/${month}/${year}`;
       }
     }
 
-    // Calcular días restantes de vencimiento
-    let venceTexto = `Vence el ${fechaVencimiento}`;
-    try {
-      const [vDay, vMonth, vYear] = fechaVencimiento.split('/').map(Number);
-      const dueDate = new Date(vYear, vMonth - 1, vDay);
-      const now = new Date();
-      const diffTime = dueDate.getTime() - now.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      if (diffDays > 1) {
-        venceTexto = `Vence en ${diffDays} días (${fechaVencimiento})`;
-      } else if (diffDays === 1) {
-        venceTexto = `Vence mañana (${fechaVencimiento})`;
-      } else if (diffDays === 0) {
-        venceTexto = `Vence hoy (${fechaVencimiento})`;
-      } else {
+    // 5. Calcular texto descriptivo de vencimiento
+    let venceTexto = 'Pendiente de pago';
+    if (isPaid) {
+      venceTexto = 'Recibo pagado (Al día)';
+    } else if (fechaVencimiento && fechaVencimiento !== '--/--/----') {
+      try {
+        const parts = fechaVencimiento.split(/[\/\-]/).map(Number);
+        if (parts.length === 3) {
+          const [vDay, vMonth, vYear] = parts;
+          const dueDate = new Date(vYear, vMonth - 1, vDay);
+          const now = new Date();
+          const diffTime = dueDate.getTime() - now.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          if (diffDays > 1) {
+            venceTexto = `Vence en ${diffDays} días (${fechaVencimiento})`;
+          } else if (diffDays === 1) {
+            venceTexto = `Vence mañana (${fechaVencimiento})`;
+          } else if (diffDays === 0) {
+            venceTexto = `Vence hoy (${fechaVencimiento})`;
+          } else {
+            venceTexto = `Vence el ${fechaVencimiento}`;
+          }
+        } else {
+          venceTexto = `Vence el ${fechaVencimiento}`;
+        }
+      } catch {
         venceTexto = `Vence el ${fechaVencimiento}`;
       }
-    } catch {
-      venceTexto = `Vence el ${fechaVencimiento}`;
+    } else {
+      venceTexto = 'Pendiente de pago';
     }
 
     const billingResult = {
-      fechaCorte,
-      fechaVencimiento,
-      saldoAPagar: `S/ ${parseFloat(saldo).toFixed(2)}`,
+      isPaid: isPaid,
+      estado: isPaid ? 'pagado' : 'pendiente',
+      fechaCorte: fechaCorte || (stored?.fechaCorte || '--/--/----'),
+      fechaVencimiento: fechaVencimiento || (stored?.fechaVencimiento || '--/--/----'),
+      saldoAPagar: `S/ ${numSaldo.toFixed(2)}`,
       venceTexto,
-      planName: stored?.planName || 'Movistar Plus 4Gb',
-      gbLibres: stored?.gbLibres || '3.5'
+      planName: stored?.planName || 'Plan Movistar',
+      gbLibres: stored?.gbLibres || '4.0'
     };
 
     saveStoredBillingInfo(phone, billingResult);
     return billingResult;
   } catch (err) {
     console.error('[chatService] Error obteniendo datos de facturación de BD:', err);
-    return stored || defaultInfo;
+    return stored || null;
   }
 };
 
