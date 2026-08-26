@@ -1,9 +1,11 @@
-import React from 'react';
-import { Sparkles, FileText, Gift, HelpCircle, Volume2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Sparkles, FileText, Gift, HelpCircle, Volume2, Pause, Play, Square, RotateCcw } from 'lucide-react';
 import ReceiptComparisonCard from '../Receipts/ReceiptComparisonCard';
+import { speakMessage, pauseSpeech, resumeSpeech, stopAllSpeech } from '../../services/ttsService';
 
 export default function MessageBubble({ message, onActionClick, onOpenDetailModal }) {
   const isUser = message.sender === 'user';
+  const [audioState, setAudioState] = useState('idle'); // 'idle' | 'playing' | 'paused'
 
   const decodeHtmlEntities = (str) => {
     if (!str) return '';
@@ -18,45 +20,89 @@ export default function MessageBubble({ message, onActionClick, onOpenDetailModa
       .replace(/&gt;/g, '>');
   };
 
-  // Detecta el idioma del mensaje para traducir labels
+  // Detecta el idioma del mensaje para labels
   const detectMsgLang = (text) => {
     if (!text) return 'es';
     const t = text.toLowerCase();
-    // Patrones básicos Quechua
-    if (/\b(ñuqa|qam|kay|chay|wasi|yaku|runa|pacha|munay|rimay|tukuy|sumaq|allillanchu|imapitaq|reciboyki|killapaq)\b/.test(t)) return 'qu';
-    // Patrones básicos Aymara
-    if (/\b(nayanxa|jichhüru|kamisaraki|yanapt|recibomata|planamata|ukax|tuqita)\b/.test(t)) return 'ay';
+    if (/\b(allillanchu|ñuqa|qam|kay|chay|wasi|yaku|runa|pacha|munay|rimay|tukuy|sumaq|imapitaq|reciboyki|killapaq|sulpayki)\b/.test(t)) return 'qu';
+    if (/\b(kamisaraki|nayanxa|jichhüru|yanapt|recibomata|planamata|ukax|tuqita|yuspajara|qawqha|kuns)\b/.test(t)) return 'ay';
     return 'es';
   };
 
-  const LISTEN_LABELS = {
-    es: 'Escuchar mensaje',
-    qu: 'Uyariy willakuyta',
-    ay: 'Uyañjam parlañaru',
+  const msgLang = isUser ? 'es' : (message.originalLang || detectMsgLang(message.text || ''));
+
+  const AUDIO_LABELS = {
+    es: {
+      listen: 'Escuchar mensaje',
+      pause: 'Pausar mensaje',
+      resume: 'Continuar mensaje',
+      stop: 'Detener audio',
+    },
+    qu: {
+      listen: 'Uyariy willakuyta',
+      pause: 'Sayachiy willakuyta',
+      resume: 'Qatiy willakuyta',
+      stop: 'Sayachiy tukuyta',
+    },
+    ay: {
+      listen: 'Uyañjam parlañaru',
+      pause: "Sayt'ayañ parlañaru",
+      resume: "Qalltañ parlañaru",
+      stop: "Tukuyñ parlañaru",
+    },
   };
 
-  const TTS_LANGS = {
-    es: 'es-PE',
-    qu: 'es-PE', // Quechua no tiene voz nativa, usar español peruano como fallback
-    ay: 'es-PE',
+  const labels = AUDIO_LABELS[msgLang] || AUDIO_LABELS.es;
+
+  // Listen to TTS events across the app so other bubbles reset if another starts
+  useEffect(() => {
+    const handleGlobalStart = (e) => {
+      if (e.detail?.messageId !== message.id) {
+        setAudioState('idle');
+      }
+    };
+    const handleGlobalEnd = (e) => {
+      if (e.detail?.messageId === message.id) {
+        setAudioState('idle');
+      }
+    };
+
+    window.addEventListener('lucio:tts-start', handleGlobalStart);
+    window.addEventListener('lucio:tts-end', handleGlobalEnd);
+
+    return () => {
+      window.removeEventListener('lucio:tts-start', handleGlobalStart);
+      window.removeEventListener('lucio:tts-end', handleGlobalEnd);
+    };
+  }, [message.id]);
+
+  const handleStartSpeak = () => {
+    setAudioState('playing');
+    speakMessage({
+      messageId: message.id,
+      text: message.text,
+      lang: msgLang,
+      onStart: () => setAudioState('playing'),
+      onEnd: () => setAudioState('idle'),
+      onError: () => setAudioState('idle'),
+      onPause: () => setAudioState('paused'),
+      onResume: () => setAudioState('playing'),
+    });
   };
 
-  const msgLang = isUser ? 'es' : detectMsgLang(message.text || '');
+  const handlePauseSpeak = () => {
+    pauseSpeech();
+    setAudioState('paused');
+  };
 
-  const handleSpeak = (text) => {
-    if (!text) return;
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const cleanText = decodeHtmlEntities(text)
-        .replace(/Luc[ií]a/gi, 'Lucio')
-        .replace(/\*\*(.*?)\*\*/g, '$1')
-        .replace(/`([^`]+)`/g, '$1');
-      const utterance = new SpeechSynthesisUtterance(cleanText);
-      utterance.lang = TTS_LANGS[msgLang] || 'es-PE';
-      window.speechSynthesis.speak(utterance);
-    } else {
-      console.warn('Web Speech API is not supported in this browser.');
-    }
+  const handleResumeSpeak = () => {
+    resumeSpeech();
+    setAudioState('playing');
+  };
+
+  const handleStopSpeak = () => {
+    stopAllSpeech();
+    setAudioState('idle');
   };
 
   const formatText = (text) => {
@@ -96,7 +142,6 @@ export default function MessageBubble({ message, onActionClick, onOpenDetailModa
         border: 'none',
       };
     }
-    // Secondary - rosa
     return {
       background: 'rgba(225,60,128,0.08)',
       color: '#c0306b',
@@ -133,7 +178,9 @@ export default function MessageBubble({ message, onActionClick, onOpenDetailModa
     );
   }
 
-  // Lucio AI message bubble (100% Real from Make)
+  // Lucio AI message bubble
+  const isAudioActive = audioState === 'playing' || audioState === 'paused';
+
   return (
     <div id={message.id} className="flex justify-start mb-6 animate-slide-up w-full">
       <div className="flex items-start gap-2.5 sm:gap-3 w-full max-w-[98%] sm:max-w-[88%] lg:max-w-[82%] min-w-0">
@@ -167,15 +214,57 @@ export default function MessageBubble({ message, onActionClick, onOpenDetailModa
               {formatText(message.text)}
             </div>
 
-            <div className="mt-3 flex justify-end">
-              <button 
-                onClick={() => handleSpeak(message.text)}
-                className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-[#019df4] transition-colors py-1 px-2 rounded-lg hover:bg-blue-50/50"
-                title={LISTEN_LABELS[msgLang] || LISTEN_LABELS.es}
-              >
-                <Volume2 className="w-4 h-4" />
-                {LISTEN_LABELS[msgLang] || LISTEN_LABELS.es}
-              </button>
+            {/* Audio Controls Bar */}
+            <div className="mt-3 flex items-center justify-end gap-2 flex-wrap">
+              {!isAudioActive ? (
+                /* 1. Botón Inicial: Escuchar mensaje */
+                <button 
+                  onClick={handleStartSpeak}
+                  type="button"
+                  className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-[#019df4] transition-all py-1.5 px-2.5 rounded-lg hover:bg-blue-50/70 border border-transparent hover:border-blue-100 cursor-pointer active:scale-95"
+                  title={labels.listen}
+                >
+                  <Volume2 className="w-4 h-4 text-[#019df4]" />
+                  <span>{labels.listen}</span>
+                </button>
+              ) : (
+                /* 2. Botones Activos: Pausar / Continuar y Detener Audio (Solo aparecen cuando el audio está activo) */
+                <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-50 border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
+                  {/* Pausar / Continuar */}
+                  {audioState === 'playing' ? (
+                    <button
+                      onClick={handlePauseSpeak}
+                      type="button"
+                      className="flex items-center gap-1.5 text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition-all py-1 px-2.5 rounded-lg cursor-pointer active:scale-95 shadow-sm"
+                      title={labels.pause}
+                    >
+                      <Pause className="w-3.5 h-3.5 fill-amber-700" />
+                      <span>{labels.pause}</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleResumeSpeak}
+                      type="button"
+                      className="flex items-center gap-1.5 text-xs font-bold text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 transition-all py-1 px-2.5 rounded-lg cursor-pointer active:scale-95 shadow-sm"
+                      title={labels.resume}
+                    >
+                      <Play className="w-3.5 h-3.5 fill-green-700" />
+                      <span>{labels.resume}</span>
+                    </button>
+                  )}
+
+                  {/* Detener Audio y Reiniciar */}
+                  <button
+                    onClick={handleStopSpeak}
+                    type="button"
+                    className="flex items-center gap-1.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 transition-all py-1 px-2.5 rounded-lg cursor-pointer active:scale-95 shadow-sm"
+                    title={labels.stop}
+                  >
+                    <Square className="w-3.5 h-3.5 fill-red-600" />
+                    <span>{labels.stop}</span>
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Visual Comparison Card - Only if explicitly passed from Make */}

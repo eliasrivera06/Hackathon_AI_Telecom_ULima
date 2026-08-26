@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { sendMessage, resetSessionId, getSavedMessages, saveMessages, getUserPhone, getCleanWelcomeMessage } from '../../services/chatService';
+import { translateConversation, translateMessage } from '../../services/translatorService';
 import MessageBubble from '../../components/MessageBubble/MessageBubble';
 import ChatInput from '../../components/Chat/ChatInput';
 import DetailModal from '../../components/Modal/DetailModal';
@@ -48,11 +49,15 @@ export default function ChatMobileComponent({ webhookUrl, userPhone: propPhone, 
   }, [messages, isLoading, propPhone]);
 
   const handleSendMessage = async (text, languageOverride = null) => {
+    const activeLang = languageOverride || (selectedLang === 'auto' ? 'es' : selectedLang);
     const userMsg = {
       id: 'msg-user-' + Date.now(),
       sender: 'user',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       text: text,
+      originalText: text,
+      originalLang: activeLang,
+      translations: { [activeLang]: text },
     };
     
     const updatedMessages = [...messages, userMsg];
@@ -63,7 +68,14 @@ export default function ChatMobileComponent({ webhookUrl, userPhone: propPhone, 
 
     try {
       const response = await sendMessage(text, webhookUrl, languageOverride);
-      const withAiResponse = [...updatedMessages, { ...response, id: 'msg-ai-' + Date.now() }];
+      const aiMsg = {
+        ...response,
+        id: 'msg-ai-' + Date.now(),
+        originalText: response.text,
+        originalLang: activeLang,
+        translations: { [activeLang]: response.text },
+      };
+      const withAiResponse = [...updatedMessages, aiMsg];
       setMessages(withAiResponse);
       saveMessages(activeUserPhone, withAiResponse);
       if (response && response.showModal) setActiveModal(response.showModal);
@@ -76,12 +88,13 @@ export default function ChatMobileComponent({ webhookUrl, userPhone: propPhone, 
 
   const handleLanguageChange = (langCode) => {
     setSelectedLang(langCode);
-    if (messages.length === 1 && messages[0].id.includes('welcome')) {
-      const activeUserPhone = propPhone || getUserPhone();
-      const freshWelcome = getCleanWelcomeMessage(langCode === 'auto' ? 'es' : langCode);
-      setMessages(freshWelcome);
-      saveMessages(activeUserPhone, freshWelcome);
-    }
+    const targetLang = langCode === 'auto' ? 'es' : langCode;
+    const activeUserPhone = propPhone || getUserPhone();
+
+    // Traducir dinámicamente toda la conversación existente sin borrarla
+    const translatedMessages = translateConversation(messages, targetLang);
+    setMessages(translatedMessages);
+    saveMessages(activeUserPhone, translatedMessages);
   };
 
   const handleResetChat = () => {
@@ -134,7 +147,6 @@ export default function ChatMobileComponent({ webhookUrl, userPhone: propPhone, 
             <RotateCcw className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Nueva Sesión</span>
           </button>
-          
         </div>
       </div>
 

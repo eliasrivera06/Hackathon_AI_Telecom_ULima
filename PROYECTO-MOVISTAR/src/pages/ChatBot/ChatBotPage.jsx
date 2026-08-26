@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { sendMessage, resetSessionId, getSavedMessages, saveMessages, getUserPhone, getCleanWelcomeMessage } from '../../services/chatService';
+import { translateConversation, translateMessage } from '../../services/translatorService';
 import ChatHistorySidebar from '../../components/Chat/ChatHistorySidebar';
 import ChatHeader from '../../components/Chat/ChatHeader';
 import MessageBubble from '../../components/MessageBubble/MessageBubble';
@@ -50,12 +51,17 @@ export default function ChatBotPage({ webhookUrl }) {
   }, [messages, isLoading]);
 
   const handleSendMessage = async (text, languageOverride = null) => {
+    const activeLang = languageOverride || (selectedLang === 'auto' ? 'es' : selectedLang);
     const userMsg = {
       id: 'msg-user-' + Date.now(),
       sender: 'user',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       text: text,
+      originalText: text,
+      originalLang: activeLang,
+      translations: { [activeLang]: text },
     };
+
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
     const currentPhone = getUserPhone();
@@ -64,7 +70,14 @@ export default function ChatBotPage({ webhookUrl }) {
 
     try {
       const response = await sendMessage(text, webhookUrl, languageOverride);
-      const withAiResponse = [...updatedMessages, { ...response, id: 'msg-ai-' + Date.now() }];
+      const aiMsg = {
+        ...response,
+        id: 'msg-ai-' + Date.now(),
+        originalText: response.text,
+        originalLang: activeLang,
+        translations: { [activeLang]: response.text },
+      };
+      const withAiResponse = [...updatedMessages, aiMsg];
       setMessages(withAiResponse);
       saveMessages(currentPhone, withAiResponse);
       if (response && response.showModal) setActiveModal(response.showModal);
@@ -83,11 +96,13 @@ export default function ChatBotPage({ webhookUrl }) {
 
   const handleLanguageChange = (langCode) => {
     setSelectedLang(langCode);
-    // Si solo hay el mensaje de bienvenida, actualizar al idioma nuevo
-    if (messages.length === 1 && messages[0].id.includes('welcome')) {
-      const freshWelcome = getCleanWelcomeMessage(langCode === 'auto' ? 'es' : langCode);
-      setMessages(freshWelcome);
-    }
+    const targetLang = langCode === 'auto' ? 'es' : langCode;
+    const currentPhone = getUserPhone();
+
+    // Traducir dinámicamente toda la conversación existente sin borrarla
+    const translatedMessages = translateConversation(messages, targetLang);
+    setMessages(translatedMessages);
+    saveMessages(currentPhone, translatedMessages);
   };
 
   const handleNewChat = () => {
